@@ -6,7 +6,8 @@ INCLUDE (${CMAKE_SOURCE_DIR}/../dpacalc-config.cmake)
 
 find_package(Eigen REQUIRED)
 find_package(TCLAP REQUIRED)
-set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Werror ${CONFIG_DEBUG_OPTIONS} ${CONFIG_OPTIMIZATION_OPTIONS}") 
+set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Werror -Wno-unused-local-typedefs ${CONFIG_DEBUG_OPTIONS} 
+${CONFIG_OPTIMIZATION_OPTIONS}") 
 set(inputsources input/${CONFIG_CLASS_INPUT}.cpp)
 set(keygensources keygen/${CONFIG_CLASS_KEYGEN}.cpp)
 set(intermediatesources gen_intermediate/${CONFIG_CLASS_INTERMEDIATE}.cpp)
