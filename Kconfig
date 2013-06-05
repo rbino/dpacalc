@@ -61,6 +61,10 @@ menu "Class choices"
 config CLASS_INPUT
 	  string "Name of the class that parses the input file"
 	  default "bin1"
+
+config CLASS_FILTER
+	  string "Name of the class that filters the input file"
+	  default "fftfilter"
   
 config CLASS_KEYGEN
 	  string "Name of the class that associates key index to real key value"

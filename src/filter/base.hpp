@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2012	Massimo Maggi
+Copyright (C) 2013	Riccardo Binetti
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,11 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 #pragma once
-#include "input/${CONFIG_CLASS_INPUT}.hpp"
-#include "filter/${CONFIG_CLASS_FILTER}.hpp"
-#include "keygen/${CONFIG_CLASS_KEYGEN}.hpp"
-#include "gen_intermediate/${CONFIG_CLASS_INTERMEDIATE}.hpp"
-#include "gen_powermodel/${CONFIG_CLASS_POWERMODEL}.hpp"
-#include "statisticaltest/${CONFIG_CLASS_STATISTIC}.hpp"
-#include "exec/${CONFIG_CLASS_EXEC}.hpp"
-#include "output/${CONFIG_CLASS_OUTPUT}.hpp"
+#include "dpacalc.h"
+
+using namespace Eigen;
+namespace Filters
+{
+	class base
+	{
+		
+	};
+}
