@@ -1,4 +1,10 @@
 *~
 *.orig
 *.bak
+*-config
+*-config.cmake
+*-config*
 config.h
+includes.h
+CMakeLists.txt.user
+out/
