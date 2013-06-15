@@ -22,6 +22,11 @@ namespace Filters
 {
 	class base
 	{
-		
+		public:
+			unsigned long long SamplesPerTrace; //from metadata, dimension N of matrix T
+			unsigned long long NumTraces; //dimension N of matrix T
+            unsigned long long SamplingFrequency;
+			base ( TCLAP::CmdLine& cmd ) {};
+          //  virtual void applyFilter() = 0;
 	};
 }

@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 #pragma once
+#include "dpacalc.h"
 #include "base.hpp"
 
 using namespace Eigen;
@@ -23,6 +24,14 @@ namespace Filters
 {
     class fftfilter : public base
     {
+        public:
+            fftfilter ( TCLAP::CmdLine& cmd ) :
+                base ( cmd ),
+                filterConfArg ( "c", "filter-conf", "Filter configuration filename", false, "", "path")
+                { cmd.add(filterConfArg);
+                };
 
+        protected:
+            TCLAP::ValueArg<std::string> filterConfArg;
     };
 }
