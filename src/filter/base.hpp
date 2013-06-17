@@ -16,17 +16,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 #pragma once
 #include "dpacalc.h"
+#include "input/base.hpp"
 
+using namespace std;
 using namespace Eigen;
 namespace Filters
 {
 	class base
 	{
 		public:
+			base ( TCLAP::CmdLine& cmd, shared_ptr<SamplesInput::base> _input ) : input ( _input ) {};
+            virtual void init() {};
+          //  virtual void applyFilter() = 0;
+		protected:
+			shared_ptr<SamplesInput::base> input;
 			unsigned long long SamplesPerTrace; //from metadata, dimension N of matrix T
 			unsigned long long NumTraces; //dimension N of matrix T
-            unsigned long long SamplingFrequency;
-			base ( TCLAP::CmdLine& cmd ) {};
-          //  virtual void applyFilter() = 0;
+            double SamplingFrequency;
 	};
 }

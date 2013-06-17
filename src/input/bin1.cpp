@@ -156,6 +156,9 @@ template <class T>void SamplesInput::bin1::readSamples ( shared_ptr<TracesMatrix
 	}
 }
 
+/*void SamplesInput::bin1::readTrace(shared_ptr<Trace>& trace){
+
+}*/
 
 std::shared_ptr< DataMatrix > SamplesInput::bin1::readData()
 {

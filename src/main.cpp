@@ -48,7 +48,7 @@ int DPA::main ( int argc, char** argv )
 	TCLAP::CmdLine cmd ( "DPA calc", ' ', VERSION );
 	exec = shared_ptr<ExecMethod::base> ( new ExecMethod::EXECCLASS ( cmd ) );
 	input = shared_ptr<SamplesInput::base> ( new SamplesInput::INPUTCLASS ( cmd ) );
-    filter = shared_ptr<Filters::base> ( new Filters::FILTERCLASS ( cmd ) );
+    filter = shared_ptr<Filters::base> ( new Filters::FILTERCLASS ( cmd, input ) );
 	keygen = shared_ptr<KeyGenerators::base> ( new KeyGenerators::KEYGENCLASS ( cmd ) );
 	interm = shared_ptr<GenerateIntermediateValues::base> ( new GenerateIntermediateValues::GENINTERMCLASS ( cmd, keygen ) );
 	genpm = shared_ptr<GeneratePowerModel::base> ( new GeneratePowerModel::GENPOWERMODELCLASS ( cmd ) );
@@ -64,6 +64,7 @@ int DPA::main ( int argc, char** argv )
 	input->init();
 	timeval start, end;
 	gettimeofday ( &start, NULL );
+    filter->init();
 	keygen->init();
 	interm->init();
 	genpm->init();
@@ -100,6 +101,7 @@ void DPA::ShowCompileTimeOptions()
 	cout << "Size of key : " << KEY_SIZE_BIT << " bit " << endl;
 	cout << endl;
 	cout << "Name of the class that reads input file: " << INPUTCLASS_STR << endl;
+    cout << "Name of the class that filters the data: " << FILTERCLASS_STR << endl;
 	cout << "Name of the class that generates intermediate values: " << GENINTERMCLASS_STR << endl;
 	cout << "Name of the class that generates power model: " << GENPOWERMODELCLASS_STR << endl;
 	cout << "Name of the class that calculates statistic data: " << STATISTICCLASS_STR << endl;

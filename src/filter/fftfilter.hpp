@@ -17,6 +17,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #pragma once
 #include "dpacalc.h"
 #include "base.hpp"
+#include <iostream>
+#include <fstream>
+#define TUKEY_ALPHA 0.5
+
+enum windowShape {
+    RECT,
+    HAMMING,
+    HANN,
+    TUKEY
+};
+
+typedef struct {
+    windowShape shape;
+    double freq1;
+    double freq2;
+}filterParam;
 
 using namespace Eigen;
 
@@ -25,13 +41,25 @@ namespace Filters
     class fftfilter : public base
     {
         public:
-            fftfilter ( TCLAP::CmdLine& cmd ) :
-                base ( cmd ),
+            fftfilter ( TCLAP::CmdLine& cmd, shared_ptr<SamplesInput::base> _input) :
+                base ( cmd, _input ),
                 filterConfArg ( "c", "filter-conf", "Filter configuration filename", false, "", "path")
                 { cmd.add(filterConfArg);
                 };
+            virtual void init();
 
         protected:
             TCLAP::ValueArg<std::string> filterConfArg;
+            ifstream config;
+            vector<filterParam> filterParamVect;
+            void tokenize(const string& str, vector<string>& tokens, const string& delimiters);
+            vector<TraceValueType> filter;
+            void initializeFilter(vector<TraceValueType>& filt, unsigned long long length);
+            unsigned long long nextPow2(unsigned long long n){
+                return pow(2, ceil(log2(n)));
+            }
+            unsigned long long fftLength;
+            double fNyq;
+            void generateWindows(vector<TraceValueType>& filt, vector<filterParam>& parameters);
     };
 }
