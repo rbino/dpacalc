@@ -52,89 +52,46 @@ void Filters::fftfilter::init(){
                 if (type.compare("bp") == 0) {
                     param.freq1 = itFilt->second.get<double>("frequencies.low");
                     param.freq2 = itFilt->second.get<double>("frequencies.high");
+                } else if (type.compare("lp") == 0) {
+                    param.freq2 = itFilt->second.get<double>("frequencies.high");
+                    param.freq1 = -param.freq2;
+                } else if (type.compare("hp") == 0) {
+                    param.freq1 = itFilt->second.get<double>("frequencies.low");
+                    param.freq2 = SamplingFrequency - param.freq1;
+                } else {
+                    cerr << "Filter configuration error: Filter type must be bp, lp or hp" << endl;
+                    exit (3);
                 }
-
                 filterParamVect.push_back(param);
             }
-
-
         } catch( ptree_error e) {
-            cerr << "Nope" << endl;
+            cerr << "Filter configuration error. Check the config file" << endl;
             exit (3);
         }
-
-/*
-        config >> SamplingFrequency;
-        fNyq = SamplingFrequency / 2;
-        string filterParamStr;
-        while (config >> filterParamStr){
-            vector<string> tokens;
-            filterParam param;
-            tokenize(filterParamStr, tokens, ":");
-            switch (tokens[0][0]){
-                case 'r':
-                    param.shape = RECT;
-                    break;
-                case 'h':
-                    param.shape = HAMMING;
-                    break;
-                case 'H':
-                    param.shape = HANN;
-                    break;
-                case 't':
-                    param.shape = TUKEY;
-                    break;
-                default:
-                    cerr << "Filter configuration error: Window shape must be r, h, H or t" << endl;
-                    exit ( 3 );
-            }
-            float tmp;
-            tmp = ::atof(tokens[1].c_str());
-            param.freq1 = tmp;
-            if (tokens[2].compare("LP") == 0){
-                param.freq2 = tmp;
-                param.freq1 = - param.freq2;
-            } else if (tokens[2].compare("HP") == 0){
-                param.freq2 = SamplingFrequency - param.freq1;
-            } else {
-                tmp = ::atof(tokens[2].c_str());
-                param.freq2 = tmp;
-            }
-            filterParamVect.push_back(param);
-       }
-       */
     } catch (info_parser::info_parser_error e) {
         cerr << "Cannot open filter configuration file" << endl;
         exit ( 3 );
     }
     fftLength = nextPow2(input->SamplesPerTrace);
-    initializeFilter(filter, fftLength);
+    initializeToZero(filter, fftLength);
     generateWindows(filter, filterParamVect);
-
 }
 
-void Filters::fftfilter::tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ")
-{
-    // Skip delimiters at beginning.
-    string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-    // Find first "non-delimiter".
-    string::size_type pos     = str.find_first_of(delimiters, lastPos);
-
-    while (string::npos != pos || string::npos != lastPos)
-    {
-        // Found a token, add it to the vector.
-        tokens.push_back(str.substr(lastPos, pos - lastPos));
-        // Skip delimiters.  Note the "not_of"
-        lastPos = str.find_first_not_of(delimiters, pos);
-        // Find next "non-delimiter"
-        pos = str.find_first_of(delimiters, lastPos);
-    }
-}
-
-void Filters::fftfilter::initializeFilter(vector<TraceValueType>& filt, unsigned long long length){
+void Filters::fftfilter::initializeToZero(vector<TraceValueType>& filt, unsigned long long length){
     for (unsigned long long i=0; i < length; i++){
         filt.push_back(0);
     }
+}
+
+void Filters::fftfilter::applyFilter(shared_ptr<Trace>& trace){
+    FFT<TraceValueType> fft;
+    vector<complex<TraceValueType> > freqvec;
+    vector<TraceValueType> zeroPad;
+    initializeToZero(zeroPad, fftLength - input->SamplesPerTrace);
+    trace->insert(trace->begin(), zeroPad.begin(), zeroPad.end());
+    fft.fwd(freqvec, *trace);
+    //blabla
+    fft.inv(*trace, freqvec);
 }
 
 void Filters::fftfilter::generateWindows(vector<TraceValueType>& filt, vector<filterParam>& parameters){
