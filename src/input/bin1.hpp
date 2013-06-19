@@ -57,6 +57,7 @@ namespace SamplesInput
 			virtual void init();
 			~bin1();
 			shared_ptr<DataMatrix> readData();
+            shared_ptr < Trace > readTrace(unsigned long id);
 		protected:
 			TCLAP::ValueArg<std::string> nameArg;
 			TCLAP::SwitchArg mlockArg;
@@ -79,6 +80,7 @@ namespace SamplesInput
 				//trace and samplenum are zero-based
 				return sizeof ( struct fileheaders ) + trace * ( samplesize * SamplesPerTrace + DATA_SIZE_BYTE ) + samplesize * SamplesPerTrace;
 			}
+            template <class T> shared_ptr < Trace > readTraceImplem(unsigned long id);
 	};
 
 

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "base.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/info_parser.hpp"
+#include "unsupported/Eigen/FFT"
 #include <iostream>
 #include <fstream>
 #define TUKEY_ALPHA 0.5
@@ -50,6 +51,7 @@ namespace Filters
                 { cmd.add(filterConfArg);
                 };
             virtual void init();
+            void applyFilter(shared_ptr<Trace>& trace);
 
         protected:
             TCLAP::ValueArg<std::string> filterConfArg;
@@ -57,7 +59,7 @@ namespace Filters
             vector<filterParam> filterParamVect;
             void tokenize(const string& str, vector<string>& tokens, const string& delimiters);
             vector<TraceValueType> filter;
-            void initializeFilter(vector<TraceValueType>& filt, unsigned long long length);
+            void initializeToZero(vector<TraceValueType>& filt, unsigned long long length);
             unsigned long long nextPow2(unsigned long long n){
                 return pow(2, ceil(log2(n)));
             }
