@@ -18,7 +18,52 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 void Filters::fftfilter::init(){
     config.open(filterConfArg.getValue().c_str());
-    if (config.is_open()){
+    try
+    {
+        ptree pt;
+        info_parser::read_info(config, pt);
+        try
+        {
+            SamplingFrequency = pt.get<float>("samplingfrequency");
+            fNyq = SamplingFrequency/2;
+            ptree filters (pt.get_child("filters"));
+            ptree::const_iterator itFilt;
+            for ( itFilt = filters.begin(); itFilt != filters.end(); ++itFilt ){
+                filterParam param;
+                char shape = itFilt->second.get<char>("window");
+                switch (shape){
+                    case 'r':
+                        param.shape = RECT;
+                        break;
+                    case 'h':
+                        param.shape = HAMMING;
+                        break;
+                    case 'H':
+                        param.shape = HANN;
+                        break;
+                    case 't':
+                        param.shape = TUKEY;
+                        break;
+                    default:
+                        cerr << "Filter configuration error: Window shape must be r, h, H or t" << endl;
+                        exit ( 3 );
+                }
+                string type = itFilt->second.get<string>("type");
+                if (type.compare("bp") == 0) {
+                    param.freq1 = itFilt->second.get<double>("frequencies.low");
+                    param.freq2 = itFilt->second.get<double>("frequencies.high");
+                }
+
+                filterParamVect.push_back(param);
+            }
+
+
+        } catch( ptree_error e) {
+            cerr << "Nope" << endl;
+            exit (3);
+        }
+
+/*
         config >> SamplingFrequency;
         fNyq = SamplingFrequency / 2;
         string filterParamStr;
@@ -57,7 +102,8 @@ void Filters::fftfilter::init(){
             }
             filterParamVect.push_back(param);
        }
-    } else {
+       */
+    } catch (info_parser::info_parser_error e) {
         cerr << "Cannot open filter configuration file" << endl;
         exit ( 3 );
     }
@@ -137,6 +183,5 @@ void Filters::fftfilter::generateWindows(vector<TraceValueType>& filt, vector<fi
     upper_half.pop_back();
     lower_half.insert(lower_half.end(), upper_half.begin(), upper_half.end());
     filter = lower_half;
-
 }
 

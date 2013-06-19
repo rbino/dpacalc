@@ -6,6 +6,7 @@ INCLUDE (${CMAKE_SOURCE_DIR}/../dpacalc-config.cmake)
 
 find_package(Eigen REQUIRED)
 find_package(TCLAP REQUIRED)
+find_package(Boost REQUIRED)
 set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Werror -Wno-unused-local-typedefs ${CONFIG_DEBUG_OPTIONS} ${CONFIG_OPTIMIZATION_OPTIONS}") 
 set(inputsources input/${CONFIG_CLASS_INPUT}.cpp)
 set(filtersources filter/${CONFIG_CLASS_FILTER}.cpp)
@@ -27,9 +28,9 @@ include( output/${CONFIG_CLASS_OUTPUT}.cmake OPTIONAL )
 
 
 
-include_directories(${EIGEN_INCLUDE_DIRS} ${TCLAP_INCLUDE_DIR} ${CMAKE_SOURCE_DIR} ${DPACALC_EXTRA_INCLUDES})
+include_directories(${EIGEN_INCLUDE_DIRS} ${TCLAP_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${CMAKE_SOURCE_DIR} ${DPACALC_EXTRA_INCLUDES})
 configure_file( config.h.in ${CMAKE_SOURCE_DIR}/config.h)
 configure_file( includes.h.in ${CMAKE_SOURCE_DIR}/includes.h)
 set(DPACALC_SRCS utils.cpp main.cpp ${inputsources} ${filtersources} ${keygensources} ${intermediatesources} ${powermodelsources} ${statisticsources} ${execsources}  ${outputsources} )
 add_executable(dpacalc ${DPACALC_SRCS})
-target_link_libraries(dpacalc ${DPACALC_EXTRA_LIBS})
+target_link_libraries(dpacalc ${DPACALC_EXTRA_LIBS} ${Boost_LIBRARIES})

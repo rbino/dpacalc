@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #pragma once
 #include "dpacalc.h"
 #include "base.hpp"
+#include "boost/property_tree/ptree.hpp"
+#include "boost/property_tree/info_parser.hpp"
 #include <iostream>
 #include <fstream>
 #define TUKEY_ALPHA 0.5
@@ -35,6 +37,7 @@ typedef struct {
 }filterParam;
 
 using namespace Eigen;
+using namespace boost::property_tree;
 
 namespace Filters
 {
