@@ -33,6 +33,14 @@ menu "Basic settings"
   config NO_TRICKS 
         bool "Disable non-semantically-correct but working optimitations"
 	default n
+	
+  choice
+	prompt "Filter output"
+    config FILTER_OUTPUT_DISK
+	  bool "Disk"
+    config FILTER_OUTPUT_RAM
+	  bool "RAM"
+  endchoice
 
   endmenu
 menu "Compilation options"

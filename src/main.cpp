@@ -54,6 +54,8 @@ int DPA::main ( int argc, char** argv )
 	genpm = shared_ptr<GeneratePowerModel::base> ( new GeneratePowerModel::GENPOWERMODELCLASS ( cmd ) );
 	stat = shared_ptr<Statistic::base> ( new Statistic::STATISTICCLASS ( cmd ) );
 	outp = shared_ptr<Output::base> ( new Output::OUTPUTCLASS ( cmd, keygen ) );
+    TCLAP::SwitchArg filterSwitch("i", "filter-input", "If set, the input is filtered. You must provide a configuration file with -c");
+    cmd.add(filterSwitch);
 	this->ShowCompileTimeOptions();
 	try {
 		cmd.parse ( argc, argv );
@@ -64,7 +66,9 @@ int DPA::main ( int argc, char** argv )
 	input->init();
 	timeval start, end;
 	gettimeofday ( &start, NULL );
-    filter->init();
+    if (filterSwitch.isSet()){
+        filter->init();
+    }
 	keygen->init();
 	interm->init();
 	genpm->init();
@@ -75,7 +79,7 @@ int DPA::main ( int argc, char** argv )
 	cout << "Done. Calculating intermediate values.....[single threaded]" << endl;
 	intval.reset (  new IntermediateValueMatrix ( input->NumTraces, KEYNUM ) );
 	interm->generate ( data, intval );
-	data.reset(); // I don't need that data anymore.
+    data.reset(); // tracewd->I don't need that data anymore.
 	cout << "Done. Calculating power model.....[single threaded]" << endl;
 	pm.reset ( new PowerModelMatrix ( input->NumTraces, KEYNUM ) );
 	genpm->generate ( intval, pm );
@@ -99,6 +103,11 @@ void DPA::ShowCompileTimeOptions()
 	cout << "Number of bit of the key to guess : " << KEY_HYP_BIT << endl;
 	cout << "Size of known data : " << DATA_SIZE_BIT << " bit " << endl;
 	cout << "Size of key : " << KEY_SIZE_BIT << " bit " << endl;
+#if defined(FILTER_OUTPUT_DISK)
+    cout << "Filter output on disk" << endl;
+#elif defined(FILTER_OUTPUT_RAM)
+    cout << "Filter output on RAM" << endl;
+#endif
 	cout << endl;
 	cout << "Name of the class that reads input file: " << INPUTCLASS_STR << endl;
     cout << "Name of the class that filters the data: " << FILTERCLASS_STR << endl;

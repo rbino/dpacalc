@@ -40,5 +40,9 @@ typedef std::vector< TraceValueType > Trace;
 typedef Eigen::Matrix<IntermediateValueType, Eigen::Dynamic, Eigen::Dynamic> IntermediateValueMatrix;
 typedef Eigen::Matrix<TraceValueType, Eigen::Dynamic, Eigen::Dynamic> PowerModelMatrix;
 typedef Eigen::Matrix<StatisticValueType, Eigen::Dynamic, Eigen::Dynamic> StatisticIndexMatrix;
+typedef struct {
+    DataValueType data;
+    Trace trace;
+} TraceWithData;
 
 

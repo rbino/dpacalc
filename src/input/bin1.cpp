@@ -156,29 +156,35 @@ template <class T>void SamplesInput::bin1::readSamples ( shared_ptr<TracesMatrix
 	}
 }
 
-shared_ptr < Trace > SamplesInput::bin1::readTrace(unsigned long id){
+void SamplesInput::bin1::readTraceWithData(shared_ptr<TraceWithData>& tracewd, unsigned long id){
     switch ( sampletype ) {
         case 'b':
-            return readTraceImplem<uint8_t> ( id );
+            readTraceWithDataImplem<uint8_t> (tracewd, id );
+            break;
         case 'c':
-            return readTraceImplem<uint16_t> ( id );
+            readTraceWithDataImplem<uint16_t> (tracewd, id );
+            break;
         case 'f':
-            return readTraceImplem<float> ( id );
+            readTraceWithDataImplem<float> (tracewd, id );
+            break;
         case 'd':
-            return readTraceImplem<double> ( id );
+            readTraceWithDataImplem<double> (tracewd, id );
+            break;
+        default:
+            exit(3);
     }
-    return 0;
 }
 
-template <class T> shared_ptr < Trace > SamplesInput::bin1::readTraceImplem(unsigned long id){
+template <class T> void SamplesInput::bin1::readTraceWithDataImplem(shared_ptr<TraceWithData>& tracewd, unsigned long id){
+    char* traceData;
     T* buffer;
-    shared_ptr<Trace> trace;
     //File is big enough, checked right after open.
+    traceData = ( char* ) fileoffset +  getDataOffset ( id );
+    BufferToBitset<DATA_SIZE_BYTE> (traceData, tracewd->data);
     buffer = ( T* ) ( ( char* ) fileoffset + getSampleOffset ( id, 0 ) );
     for ( unsigned long i = 0; i < SamplesPerTrace; i++ ) {
-        (*trace)[i] = buffer[i];
+        tracewd->trace.push_back((TraceValueType) buffer[i]);
     }
-    return trace;
 }
 
 std::shared_ptr< DataMatrix > SamplesInput::bin1::readData()

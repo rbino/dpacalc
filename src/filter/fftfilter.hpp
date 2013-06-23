@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "base.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/info_parser.hpp"
+#include "boost/foreach.hpp"
 #include "unsupported/Eigen/FFT"
 #include <iostream>
 #include <fstream>
@@ -35,7 +36,7 @@ typedef struct {
     windowShape shape;
     double freq1;
     double freq2;
-}filterParam;
+} filterParam;
 
 using namespace Eigen;
 using namespace boost::property_tree;
@@ -51,7 +52,7 @@ namespace Filters
                 { cmd.add(filterConfArg);
                 };
             virtual void init();
-            void applyFilter(shared_ptr<Trace>& trace);
+            void applyFilter(shared_ptr<TraceWithData>& tracewd);
 
         protected:
             TCLAP::ValueArg<std::string> filterConfArg;
@@ -66,5 +67,6 @@ namespace Filters
             unsigned long long fftLength;
             double fNyq;
             void generateWindows(vector<TraceValueType>& filt, vector<filterParam>& parameters);
+            void debugPrint(Trace& trace, string filename);
     };
 }
