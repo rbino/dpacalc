@@ -27,6 +27,7 @@ namespace Filters
 		public:
 			base ( TCLAP::CmdLine& cmd, shared_ptr<SamplesInput::base> _input ) : input ( _input ) {};
             virtual void init() {};
+						virtual void applyFilter(shared_ptr<TraceWithData>& tracewd) = 0;
           //  virtual void applyFilter() = 0;
 		protected:
 			shared_ptr<SamplesInput::base> input;

@@ -75,6 +75,7 @@ void Filters::fftfilter::init(){
     fftLength = nextPow2(input->SamplesPerTrace);
     initializeToZero(filter, fftLength);
     generateWindows(filter, filterParamVect);
+    debugPrint(filter, "/home/rbino/dpaoutput/filterDebug");
 }
 
 void Filters::fftfilter::initializeToZero(vector<TraceValueType>& filt, unsigned long long length){
@@ -83,15 +84,39 @@ void Filters::fftfilter::initializeToZero(vector<TraceValueType>& filt, unsigned
     }
 }
 
-void Filters::fftfilter::applyFilter(shared_ptr<Trace>& trace){
+void Filters::fftfilter::applyFilter(shared_ptr<TraceWithData>& tracewd){
     FFT<TraceValueType> fft;
     vector<complex<TraceValueType> > freqvec;
-    vector<TraceValueType> zeroPad;
-    initializeToZero(zeroPad, fftLength - input->SamplesPerTrace);
-    trace->insert(trace->begin(), zeroPad.begin(), zeroPad.end());
-    fft.fwd(freqvec, *trace);
+    Trace zeroPad;
+    unsigned long zeroPadLength = fftLength - input->SamplesPerTrace;
+    initializeToZero(zeroPad, zeroPadLength);
+    debugPrint(tracewd->trace, "/home/rbino/dpaoutput/preFftTrace");
+    tracewd->trace.insert(tracewd->trace.end(), zeroPad.begin(), zeroPad.end());
+    fft.fwd(freqvec, tracewd->trace);
+    if (freqvec.size() == filter.size()){
+        for(unsigned int i=0; i<freqvec.size(); i++){
+            freqvec[i] = freqvec[i] * filter[i];
+        }
+    } else {
+        cerr << "FFT length not equal to filter length" << endl;
+        exit(3);
+    }
     //blabla
-    fft.inv(*trace, freqvec);
+    fft.inv(tracewd->trace, freqvec);
+    tracewd->trace.resize(input->SamplesPerTrace);
+    debugPrint(tracewd->trace, "/home/rbino/dpaoutput/postFftTrace");
+}
+
+void Filters::fftfilter::debugPrint(Trace& trace, string filename){
+    int counter = 0;
+    ofstream debug(filename);
+    if (debug.is_open()){
+        BOOST_FOREACH(TraceValueType sample, trace)
+        {
+         debug << counter << "\t" << sample << endl;
+         counter++;
+        }
+    }
 }
 
 void Filters::fftfilter::generateWindows(vector<TraceValueType>& filt, vector<filterParam>& parameters){
