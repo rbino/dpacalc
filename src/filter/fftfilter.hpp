@@ -58,15 +58,14 @@ namespace Filters
             TCLAP::ValueArg<std::string> filterConfArg;
             ifstream config;
             vector<filterParam> filterParamVect;
-            void tokenize(const string& str, vector<string>& tokens, const string& delimiters);
-            vector<TraceValueType> filter;
-            void initializeToZero(vector<TraceValueType>& filt, unsigned long long length);
+            shared_ptr<Trace> filter;
+            void initializeToZero(shared_ptr<Trace>& filt, unsigned long long length);
             unsigned long long nextPow2(unsigned long long n){
                 return pow(2, ceil(log2(n)));
             }
             unsigned long long fftLength;
             double fNyq;
-            void generateWindows(vector<TraceValueType>& filt, vector<filterParam>& parameters);
+            void generateWindows(shared_ptr<Trace>& filt, vector<filterParam>& parameters);
             void debugPrint(Trace& trace, string filename);
             void combineFilter(unsigned long pos, TraceValueType windowValue);
             TraceValueType maxBin;

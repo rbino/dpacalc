@@ -42,6 +42,7 @@ namespace SamplesInput
 			virtual shared_ptr<DataMatrix> readData() = 0;
 			virtual void populateQueue() {};
 			virtual void readTraceWithData(shared_ptr<TraceWithData>& tracewd, unsigned long id) = 0;
+			virtual void changeFileOffset(void* newOffset, long long newSize) = 0;
 
 		protected:
 			shared_ptr<DataMatrix> data;

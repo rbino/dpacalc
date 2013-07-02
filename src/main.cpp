@@ -114,6 +114,15 @@ void DPA::ShowCompileTimeOptions()
 #elif defined(CONFIG_FILTER_OUTPUT_RAM)
     cout << "Filter output on RAM" << endl;
 #endif
+#if defined(CONFIG_FILTER_COMBINE_NOTHING)
+    cout << "Filter combining: do nothing" << endl;
+#elif defined(CONFIG_FILTER_COMBINE_NORMALIZE)
+    cout << "Filter combining: normalize" << endl;
+#elif defined(CONFIG_FILTER_COMBINE_CLAMP)
+    cout<< "Filter combining: clamp" << endl;
+#endif
+
+
 	cout << endl;
 	cout << "Name of the class that reads input file: " << INPUTCLASS_STR << endl;
     cout << "Name of the class that filters the data: " << FILTERCLASS_STR << endl;

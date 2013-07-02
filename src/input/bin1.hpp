@@ -58,7 +58,7 @@ namespace SamplesInput
 			~bin1();
 			shared_ptr<DataMatrix> readData();
             void readTraceWithData(shared_ptr<TraceWithData>& tracewd, unsigned long id);
-            void changeFilePointer(void* newPointer);
+            void changeFileOffset(void* newOffset, long long newSize);
 		protected:
 			TCLAP::ValueArg<std::string> nameArg;
 			TCLAP::SwitchArg mlockArg;
@@ -68,6 +68,7 @@ namespace SamplesInput
 			char sampletype;
 			int samplesize;
 			void* fileoffset;
+            bool offsetUnmap;
 			shared_ptr<DataMatrix> data;
 			void populateQueue();
 			mutex queuemutex;

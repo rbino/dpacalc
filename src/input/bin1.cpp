@@ -44,6 +44,7 @@ void SamplesInput::bin1::init()
 {
 	struct fileheaders header;
 	long long TotalFileSize;
+    offsetUnmap = true;
 	SamplesInput::base::init();
 	inputfd = open ( nameArg.getValue().c_str(), O_RDONLY );
 	if ( inputfd == -1 ) {
@@ -98,7 +99,6 @@ void SamplesInput::bin1::init()
 		mlock ( fileoffset, RealFileSize );
 		cout << "mlock-ed" << endl;
 	}
-	readData();
 }
 
 void SamplesInput::bin1::populateQueue()
@@ -145,6 +145,31 @@ void SamplesInput::bin1::populateQueue()
 	return ;
 }
 
+void SamplesInput::bin1::changeFileOffset(void *newOffset, long long newSize){
+    if ( mlockArg.getValue() ) {
+        cout << "munlock-ing old values" << endl;
+        munlock ( fileoffset, RealFileSize );
+        cout << "munlock-ed" << endl;
+    }
+    munmap ( fileoffset, RealFileSize );
+    fileoffset = newOffset;
+    RealFileSize = newSize;
+    samplesize = sizeof(TraceValueType);
+    if (samplesize == sizeof(float)){
+        sampletype = 'f';
+    }
+    else if (samplesize == sizeof(double)){
+        sampletype = 'd';
+    }
+    if ( mlockArg.getValue() ) {
+        cout << "mlock-ing filtered values" << endl;
+        mlock ( fileoffset, RealFileSize );
+        cout << "mlock-ed" << endl;
+    }
+#if defined(CONFIG_FILTER_OUTPUT_RAM)
+    offsetUnmap = false;
+#endif
+}
 
 template <class T>void SamplesInput::bin1::readSamples ( shared_ptr<TracesMatrix>& traces, unsigned long curtrace, unsigned long startingsample, unsigned long numsamples )
 {
@@ -170,8 +195,6 @@ void SamplesInput::bin1::readTraceWithData(shared_ptr<TraceWithData>& tracewd, u
         case 'd':
             readTraceWithDataImplem<double> (tracewd, id );
             break;
-        default:
-            exit(3);
     }
 }
 
@@ -207,7 +230,8 @@ SamplesInput::bin1::~bin1()
 	if ( mlockArg.getValue() ) {
 		munlock ( fileoffset, RealFileSize );
 	}
-	munmap ( fileoffset, RealFileSize );
+    if (offsetUnmap){
+        munmap ( fileoffset, RealFileSize );
+    }
 	close ( inputfd );
 }
-
