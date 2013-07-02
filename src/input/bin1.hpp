@@ -58,6 +58,7 @@ namespace SamplesInput
 			~bin1();
 			shared_ptr<DataMatrix> readData();
             void readTraceWithData(shared_ptr<TraceWithData>& tracewd, unsigned long id);
+            void changeFilePointer(void* newPointer);
 		protected:
 			TCLAP::ValueArg<std::string> nameArg;
 			TCLAP::SwitchArg mlockArg;

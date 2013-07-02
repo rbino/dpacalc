@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "unsupported/Eigen/FFT"
 #include <iostream>
 #include <fstream>
-#define TUKEY_ALPHA 0.5
 
 enum windowShape {
     RECT,
@@ -36,6 +35,7 @@ typedef struct {
     windowShape shape;
     double freq1;
     double freq2;
+    double tukeyAlpha;
 } filterParam;
 
 using namespace Eigen;
@@ -68,5 +68,7 @@ namespace Filters
             double fNyq;
             void generateWindows(vector<TraceValueType>& filt, vector<filterParam>& parameters);
             void debugPrint(Trace& trace, string filename);
+            void combineFilter(unsigned long pos, TraceValueType windowValue);
+            TraceValueType maxBin;
     };
 }

@@ -43,6 +43,7 @@ void Filters::fftfilter::init(){
                         break;
                     case 't':
                         param.shape = TUKEY;
+                        param.tukeyAlpha = itFilt->second.get<double>("alpha", 0.5);
                         break;
                     default:
                         cerr << "Filter configuration error: Window shape must be r, h, H or t" << endl;
@@ -72,6 +73,7 @@ void Filters::fftfilter::init(){
         cerr << "Cannot open filter configuration file" << endl;
         exit ( 3 );
     }
+    maxBin = 1;
     fftLength = nextPow2(input->SamplesPerTrace);
     initializeToZero(filter, fftLength);
     generateWindows(filter, filterParamVect);
@@ -101,7 +103,6 @@ void Filters::fftfilter::applyFilter(shared_ptr<TraceWithData>& tracewd){
         cerr << "FFT length not equal to filter length" << endl;
         exit(3);
     }
-    //blabla
     fft.inv(tracewd->trace, freqvec);
     tracewd->trace.resize(input->SamplesPerTrace);
     debugPrint(tracewd->trace, "/home/rbino/dpaoutput/postFftTrace");
@@ -123,40 +124,49 @@ void Filters::fftfilter::generateWindows(vector<TraceValueType>& filt, vector<fi
     for (vector<filterParam>::iterator windowParam = parameters.begin(); windowParam != parameters.end(); ++windowParam){
         int nBins = (int) ceil((windowParam->freq2 - windowParam->freq1)/fNyq * fftLength/2);
         vector<TraceValueType> window;
-        switch (windowParam->shape){
-            case RECT:
-                for (int n=0; n < nBins; n++){
-                    window.push_back(1);
-                }
-                break;
-            case HAMMING:
-                for (int n=0; n < nBins; n++){
-                    window.push_back( 0.54 - 0.46 * cos( (2*M_PI*n) / ( nBins-1 ) ) );
-                }
-                break;
-            case HANN:
-                for (int n=0; n < nBins; n++){
-                    window.push_back( 0.5 * (1 - cos(2*M_PI*n/(nBins-1))));
-                }
-                break;
-            case TUKEY:
-                for (int n=0; n < nBins; n++)
-                    if (n <= TUKEY_ALPHA*(nBins-1)/2){
-                        window.push_back( 0.5 * ( 1 + cos(M_PI * ((2*n/(TUKEY_ALPHA*(nBins-1)))-1))));
-                    } else if (n <= (nBins-1)*(1-(TUKEY_ALPHA/2))) {
+        if (nBins == 1){
+            window.push_back(1);
+        } else {
+            switch (windowParam->shape){
+                case RECT:
+                    for (int n=0; n < nBins; n++){
                         window.push_back(1);
-                    }   else {
-                        window.push_back(0.5 * ( 1 + cos(M_PI * ((2*n/(TUKEY_ALPHA*(nBins-1)))- (2/TUKEY_ALPHA) + 1))));
                     }
-                break;
+                    break;
+                case HAMMING:
+                    for (int n=0; n < nBins; n++){
+                        window.push_back( 0.54 - 0.46 * cos( (2*M_PI*n) / ( nBins-1 ) ) );
+                    }
+                    break;
+                case HANN:
+                    for (int n=0; n < nBins; n++){
+                        window.push_back( 0.5 * (1 - cos(2*M_PI*n/(nBins-1))));
+                    }
+                    break;
+                case TUKEY:
+                    for (int n=0; n < nBins; n++)
+                        if (n <= windowParam->tukeyAlpha*(nBins-1)/2){
+                            window.push_back( 0.5 * ( 1 + cos(M_PI * ((2*n/(windowParam->tukeyAlpha*(nBins-1)))-1))));
+                        } else if (n <= (nBins-1)*(1-(windowParam->tukeyAlpha/2))) {
+                            window.push_back(1);
+                        }   else {
+                            window.push_back(0.5 * ( 1 + cos(M_PI * ((2*n/(windowParam->tukeyAlpha*(nBins-1)))- (2/windowParam->tukeyAlpha) + 1))));
+                        }
+                    break;
+            }
         }
         int startBin = (int) ceil((windowParam->freq1 * fftLength/2) / fNyq);
         for (int n=0; n < nBins; n++){
-            filter[(startBin+n)%fftLength] += window[n]; //TODO: combine
+            combineFilter(startBin+n%fftLength, window[n]);
+//            filter[(startBin+n)%fftLength] += window[n]; //TODO: combine
         }
 
     }
-
+#if defined(CONFIG_FILTER_COMBINE_NORMALIZE)
+    for (unsigned long i=0; i<filter.size(); i++){
+        filter[i] = filter[i] / maxBin;
+    }
+#endif
     std::size_t const nyquistBin = filter.size() / 2;
     std::vector<TraceValueType> lower_half(filter.begin(), filter.begin() + nyquistBin + 1);
     std::vector<TraceValueType> upper_half(lower_half);
@@ -165,5 +175,18 @@ void Filters::fftfilter::generateWindows(vector<TraceValueType>& filt, vector<fi
     upper_half.pop_back();
     lower_half.insert(lower_half.end(), upper_half.begin(), upper_half.end());
     filter = lower_half;
+}
+
+void Filters::fftfilter::combineFilter(unsigned long pos, TraceValueType windowValue){
+    filter[pos] += windowValue;
+#if defined(CONFIG_FILTER_COMBINE_NORMALIZE)
+    if (filter[pos] > maxBin){
+        maxBin = filter[pos];
+    }
+#elif defined(CONFIG_FILTER_COMBINE_CLAMP)
+    if (filter[pos] > 1){
+        filter[pos] = 1;
+    }
+#endif
 }
 

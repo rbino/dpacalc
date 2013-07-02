@@ -42,6 +42,16 @@ menu "Basic settings"
 	  bool "RAM"
   endchoice
 
+  choice
+  	prompt "Filters combination"
+    config FILTER_COMBINE_NOTHING
+  	  bool "Do nothing (something is amplified)"
+    config FILTER_COMBINE_NORMALIZE
+	  bool "Normalize (may add block-bands)"
+    config FILTER_COMBINE_CLAMP
+	  bool "Clamp (changes shape)"
+  endchoice
+
   endmenu
 menu "Compilation options"
   choice
