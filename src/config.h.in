@@ -7,6 +7,9 @@
 #cmakedefine CONFIG_NO_TRICKS
 #cmakedefine CONFIG_FILTER_OUTPUT_DISK
 #cmakedefine CONFIG_FILTER_OUTPUT_RAM
+#cmakedefine CONFIG_FILTER_COMBINE_NOTHING
+#cmakedefine CONFIG_FILTER_COMBINE_NORMALIZE
+#cmakedefine CONFIG_FILTER_COMBINE_CLAMP
 
 #if defined(CONFIG_TRACETYPE_FLOAT)
 typedef float TraceValueType;
@@ -38,9 +41,3 @@ typedef double TraceValueType;
 #define KEY_SIZE_BIT ${CONFIG_FULL_KEY_SIZE}
 
 #define INPUT_QUEUE_SIZE ${CONFIG_INPUT_QUEUE_SIZE}
-
-#if defined(CONFIG_FILTER_OUTPUT_DISK)
-#define FILTER_OUTPUT_DISK
-#elif defined(CONFIG_FILTER_OUTPUT_RAM)
-#define FILTER_OUTPUT_RAM
-#endif

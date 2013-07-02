@@ -68,11 +68,17 @@ int DPA::main ( int argc, char** argv )
 	gettimeofday ( &start, NULL );
     if (filterSwitch.isSet()){
         filter->init();
+    } else {
+        filter.reset();
     }
 	keygen->init();
 	interm->init();
 	genpm->init();
 	outp->init();
+/*    if (filterSwitch.isSet()){
+        // Apply filter
+    }
+*/
 	numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
 	cout << "Reading known data..." << endl;
 	data = input->readData();
@@ -103,9 +109,9 @@ void DPA::ShowCompileTimeOptions()
 	cout << "Number of bit of the key to guess : " << KEY_HYP_BIT << endl;
 	cout << "Size of known data : " << DATA_SIZE_BIT << " bit " << endl;
 	cout << "Size of key : " << KEY_SIZE_BIT << " bit " << endl;
-#if defined(FILTER_OUTPUT_DISK)
+#if defined(CONFIG_FILTER_OUTPUT_DISK)
     cout << "Filter output on disk" << endl;
-#elif defined(FILTER_OUTPUT_RAM)
+#elif defined(CONFIG_FILTER_OUTPUT_RAM)
     cout << "Filter output on RAM" << endl;
 #endif
 	cout << endl;

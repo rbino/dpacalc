@@ -29,9 +29,11 @@ namespace SamplesInput
 			unsigned long long SamplesPerTrace; //from metadata, dimension N of matrix T
 			unsigned long long NumTraces; //dimension N of matrix T
 			unsigned long long CurrentSample;  //dimension N of matrix T
+			unsigned long long CurrentTrace;
 			base ( TCLAP::CmdLine& cmd ) {};
 			virtual void init() {
 				CurrentSample = 0;
+				CurrentTrace = 0;
 				CurrentId = -1;
 				NumTraces = 0;
 				SamplesPerTrace = 0;
