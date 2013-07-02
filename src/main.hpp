@@ -35,6 +35,7 @@ class DPA
 
 		int main ( int argc, char** argv );
 		void doRun();
+        void doFilter();
 		void prefetch();
 		static DPA* instance() {
 			static DPA theInstance;

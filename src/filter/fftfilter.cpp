@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "fftfilter.hpp"
 
 void Filters::fftfilter::init(){
+    filter.reset(new Trace(SamplesPerTrace));
     config.open(filterConfArg.getValue().c_str());
     try
     {
@@ -53,6 +54,10 @@ void Filters::fftfilter::init(){
                 if (type.compare("bp") == 0) {
                     param.freq1 = itFilt->second.get<double>("frequencies.low");
                     param.freq2 = itFilt->second.get<double>("frequencies.high");
+                    if (param.freq1 > param.freq2){
+                        cerr << "Low frequency must be lower than high frequency" << endl;
+                        exit (3);
+                    }
                 } else if (type.compare("lp") == 0) {
                     param.freq2 = itFilt->second.get<double>("frequencies.high");
                     param.freq1 = -param.freq2;
@@ -77,33 +82,33 @@ void Filters::fftfilter::init(){
     fftLength = nextPow2(input->SamplesPerTrace);
     initializeToZero(filter, fftLength);
     generateWindows(filter, filterParamVect);
-    debugPrint(filter, "/home/rbino/dpaoutput/filterDebug");
+    debugPrint(*filter, "/home/rbino/dpaoutput/filterDebug");
 }
 
-void Filters::fftfilter::initializeToZero(vector<TraceValueType>& filt, unsigned long long length){
+void Filters::fftfilter::initializeToZero(shared_ptr<Trace>& trace, unsigned long long length){
     for (unsigned long long i=0; i < length; i++){
-        filt.push_back(0);
+        trace->push_back(0);
     }
 }
 
 void Filters::fftfilter::applyFilter(shared_ptr<TraceWithData>& tracewd){
     FFT<TraceValueType> fft;
-    vector<complex<TraceValueType> > freqvec;
-    Trace zeroPad;
+    shared_ptr<ComplexTrace> freqvec (new ComplexTrace(fftLength));
     unsigned long zeroPadLength = fftLength - input->SamplesPerTrace;
+    shared_ptr<Trace> zeroPad (new Trace(zeroPadLength));
     initializeToZero(zeroPad, zeroPadLength);
     debugPrint(tracewd->trace, "/home/rbino/dpaoutput/preFftTrace");
-    tracewd->trace.insert(tracewd->trace.end(), zeroPad.begin(), zeroPad.end());
-    fft.fwd(freqvec, tracewd->trace);
-    if (freqvec.size() == filter.size()){
-        for(unsigned int i=0; i<freqvec.size(); i++){
-            freqvec[i] = freqvec[i] * filter[i];
+    tracewd->trace.insert(tracewd->trace.end(), zeroPad->begin(), zeroPad->end());
+    fft.fwd(*freqvec, tracewd->trace);
+    if (freqvec->size() == filter->size()){
+        for(unsigned int i=0; i<freqvec->size(); i++){
+            (*freqvec) [i] = (*freqvec) [i] * (*filter) [i];
         }
     } else {
         cerr << "FFT length not equal to filter length" << endl;
         exit(3);
     }
-    fft.inv(tracewd->trace, freqvec);
+    fft.inv(tracewd->trace, *freqvec);
     tracewd->trace.resize(input->SamplesPerTrace);
     debugPrint(tracewd->trace, "/home/rbino/dpaoutput/postFftTrace");
 }
@@ -120,7 +125,7 @@ void Filters::fftfilter::debugPrint(Trace& trace, string filename){
     }
 }
 
-void Filters::fftfilter::generateWindows(vector<TraceValueType>& filt, vector<filterParam>& parameters){
+void Filters::fftfilter::generateWindows(shared_ptr<Trace>& filt, vector<filterParam>& parameters){
     for (vector<filterParam>::iterator windowParam = parameters.begin(); windowParam != parameters.end(); ++windowParam){
         int nBins = (int) ceil((windowParam->freq2 - windowParam->freq1)/fNyq * fftLength/2);
         vector<TraceValueType> window;
@@ -158,7 +163,6 @@ void Filters::fftfilter::generateWindows(vector<TraceValueType>& filt, vector<fi
         int startBin = (int) ceil((windowParam->freq1 * fftLength/2) / fNyq);
         for (int n=0; n < nBins; n++){
             combineFilter(startBin+n%fftLength, window[n]);
-//            filter[(startBin+n)%fftLength] += window[n]; //TODO: combine
         }
 
     }
@@ -167,25 +171,25 @@ void Filters::fftfilter::generateWindows(vector<TraceValueType>& filt, vector<fi
         filter[i] = filter[i] / maxBin;
     }
 #endif
-    std::size_t const nyquistBin = filter.size() / 2;
-    std::vector<TraceValueType> lower_half(filter.begin(), filter.begin() + nyquistBin + 1);
+    std::size_t const nyquistBin = filter->size() / 2;
+    std::vector<TraceValueType> lower_half(filter->begin(), filter->begin() + nyquistBin + 1);
     std::vector<TraceValueType> upper_half(lower_half);
     upper_half.pop_back();
     reverse(upper_half.begin(), upper_half.end());
     upper_half.pop_back();
     lower_half.insert(lower_half.end(), upper_half.begin(), upper_half.end());
-    filter = lower_half;
+    *filter = lower_half;
 }
 
 void Filters::fftfilter::combineFilter(unsigned long pos, TraceValueType windowValue){
-    filter[pos] += windowValue;
+    (*filter) [pos] += windowValue;
 #if defined(CONFIG_FILTER_COMBINE_NORMALIZE)
     if (filter[pos] > maxBin){
         maxBin = filter[pos];
     }
 #elif defined(CONFIG_FILTER_COMBINE_CLAMP)
-    if (filter[pos] > 1){
-        filter[pos] = 1;
+    if ((*filter) [pos] > 1){
+        (*filter) [pos] = 1;
     }
 #endif
 }
