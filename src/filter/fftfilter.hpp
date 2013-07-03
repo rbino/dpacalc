@@ -31,18 +31,18 @@ enum windowShape {
     TUKEY
 };
 
-typedef struct {
-    windowShape shape;
-    double freq1;
-    double freq2;
-    double tukeyAlpha;
-} filterParam;
-
 using namespace Eigen;
 using namespace boost::property_tree;
 
 namespace Filters
 {
+    typedef struct {
+        windowShape shape;
+        double freq1;
+        double freq2;
+        double tukeyAlpha;
+    } filterParam;
+
     class fftfilter : public base
     {
         public:
@@ -66,8 +66,20 @@ namespace Filters
             unsigned long long fftLength;
             double fNyq;
             void generateWindows(shared_ptr<Trace>& filt, vector<filterParam>& parameters);
-            void debugPrint(Trace& trace, string filename);
+            void debugPrint(shared_ptr<Trace>& trace, string filename);
             void combineFilter(unsigned long pos, TraceValueType windowValue);
             TraceValueType maxBin;
+            unsigned long long getSampleOffset ( unsigned long long trace, unsigned long long samplenum ) {
+                //trace and samplenum are zero-based
+                return sizeof ( struct fileheaders ) + trace * ( sizeof(TraceValueType) * SamplesPerTrace + DATA_SIZE_BYTE ) + sizeof(TraceValueType) * samplenum;
+            }
+            unsigned long long getDataOffset ( unsigned long long trace ) {
+                //trace and samplenum are zero-based
+                return sizeof ( struct fileheaders ) + trace * ( sizeof(TraceValueType) * SamplesPerTrace + DATA_SIZE_BYTE ) + sizeof(TraceValueType) * SamplesPerTrace;
+            }
+            unsigned long long getBufferDimension () {
+                //trace and samplenum are zero-based
+                return sizeof ( struct fileheaders ) + NumTraces * ( sizeof(TraceValueType) * SamplesPerTrace + DATA_SIZE_BYTE );
+            }
     };
 }

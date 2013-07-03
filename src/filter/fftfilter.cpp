@@ -18,7 +18,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 void Filters::fftfilter::init(){
     filter.reset(new Trace(SamplesPerTrace));
+    SamplesPerTrace = input->SamplesPerTrace;
+    NumTraces = input->NumTraces;
     config.open(filterConfArg.getValue().c_str());
+    if (!config.is_open()){
+        if(!filterConfArg.isSet()){
+            cerr << "If you filter (-i), you must specify a filter configuration file (-c filename)" << endl;
+        } else {
+            cerr << "Cannot open filter configuration " << filterConfArg.getValue() << endl;
+        }
+        exit(3);
+    }
     try
     {
         ptree pt;
@@ -75,14 +85,14 @@ void Filters::fftfilter::init(){
             exit (3);
         }
     } catch (info_parser::info_parser_error e) {
-        cerr << "Cannot open filter configuration file" << endl;
+        cerr << "Cannot parse filter configuration" << endl;
         exit ( 3 );
     }
     maxBin = 1;
-    fftLength = nextPow2(input->SamplesPerTrace);
+    fftLength = nextPow2(SamplesPerTrace);
     initializeToZero(filter, fftLength);
     generateWindows(filter, filterParamVect);
-    debugPrint(*filter, "/home/rbino/dpaoutput/filterDebug");
+    debugPrint(filter, "/home/rbino/dpaoutput/filterDebug");
 }
 
 void Filters::fftfilter::initializeToZero(shared_ptr<Trace>& trace, unsigned long long length){
@@ -94,12 +104,12 @@ void Filters::fftfilter::initializeToZero(shared_ptr<Trace>& trace, unsigned lon
 void Filters::fftfilter::applyFilter(shared_ptr<TraceWithData>& tracewd){
     FFT<TraceValueType> fft;
     shared_ptr<ComplexTrace> freqvec (new ComplexTrace(fftLength));
-    unsigned long zeroPadLength = fftLength - input->SamplesPerTrace;
+    unsigned long zeroPadLength = fftLength - SamplesPerTrace;
     shared_ptr<Trace> zeroPad (new Trace(zeroPadLength));
     initializeToZero(zeroPad, zeroPadLength);
     debugPrint(tracewd->trace, "/home/rbino/dpaoutput/preFftTrace");
-    tracewd->trace.insert(tracewd->trace.end(), zeroPad->begin(), zeroPad->end());
-    fft.fwd(*freqvec, tracewd->trace);
+    (tracewd->trace)->insert((tracewd->trace)->end(), zeroPad->begin(), zeroPad->end());
+    fft.fwd(*freqvec, *(tracewd->trace));
     if (freqvec->size() == filter->size()){
         for(unsigned int i=0; i<freqvec->size(); i++){
             (*freqvec) [i] = (*freqvec) [i] * (*filter) [i];
@@ -108,16 +118,16 @@ void Filters::fftfilter::applyFilter(shared_ptr<TraceWithData>& tracewd){
         cerr << "FFT length not equal to filter length" << endl;
         exit(3);
     }
-    fft.inv(tracewd->trace, *freqvec);
-    tracewd->trace.resize(input->SamplesPerTrace);
+    fft.inv(*(tracewd->trace), *freqvec);
+    (tracewd->trace)->resize(SamplesPerTrace);
     debugPrint(tracewd->trace, "/home/rbino/dpaoutput/postFftTrace");
 }
 
-void Filters::fftfilter::debugPrint(Trace& trace, string filename){
+void Filters::fftfilter::debugPrint(shared_ptr<Trace>& trace, string filename){
     int counter = 0;
     ofstream debug(filename);
     if (debug.is_open()){
-        BOOST_FOREACH(TraceValueType sample, trace)
+        BOOST_FOREACH(TraceValueType sample, *trace)
         {
          debug << counter << "\t" << sample << endl;
          counter++;

@@ -24,7 +24,9 @@ using namespace Eigen;
 using namespace std;
 namespace SamplesInput
 {
+/*
 #pragma pack(push)
+
 #pragma pack(1)
 	struct fileheaders {
 		uint32_t numtraces;
@@ -32,7 +34,9 @@ namespace SamplesInput
 		char datatype;
 		uint8_t knowndatalength;
 	};
+
 #pragma pack(pop)
+*/
 	struct queueelement {
 		unsigned long long id;
 		long long size;
@@ -74,14 +78,14 @@ namespace SamplesInput
 			mutex queuemutex;
 			long long RealFileSize;
 			queue<queueelement> readytraces;
-			unsigned long long getSampleOffset ( unsigned long long trace, unsigned long long samplenum ) {
-				//trace and samplenum are zero-based
-				return sizeof ( struct fileheaders ) + trace * ( samplesize * SamplesPerTrace + DATA_SIZE_BYTE ) + samplesize * samplenum;
-			}
-			unsigned long long getDataOffset ( unsigned long long trace ) {
-				//trace and samplenum are zero-based
-				return sizeof ( struct fileheaders ) + trace * ( samplesize * SamplesPerTrace + DATA_SIZE_BYTE ) + samplesize * SamplesPerTrace;
-			}
+            unsigned long long getSampleOffset ( unsigned long long trace, unsigned long long samplenum ) {
+                //trace and samplenum are zero-based
+                return sizeof ( struct fileheaders ) + trace * ( samplesize * SamplesPerTrace + DATA_SIZE_BYTE ) + samplesize * samplenum;
+            }
+            unsigned long long getDataOffset ( unsigned long long trace ) {
+                //trace and samplenum are zero-based
+                return sizeof ( struct fileheaders ) + trace * ( samplesize * SamplesPerTrace + DATA_SIZE_BYTE ) + samplesize * SamplesPerTrace;
+            }
             template <class T> void readTraceWithDataImplem(shared_ptr<TraceWithData>& tracewd, unsigned long id);
 	};
 

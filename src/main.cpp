@@ -36,6 +36,11 @@ void DPA::doRun() //BBQ-style. This method can be started multiple times in diff
 	outp->WriteBatch ( myid, sm );
 }
 
+void DPA::doFilter()
+{
+
+}
+
 void DPA::prefetch()
 {
 	while ( input->CurrentSample < input->SamplesPerTrace ) {
