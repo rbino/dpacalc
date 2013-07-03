@@ -203,10 +203,10 @@ template <class T> void SamplesInput::bin1::readTraceWithDataImplem(shared_ptr<T
     T* buffer;
     //File is big enough, checked right after open.
     traceData = ( char* ) fileoffset +  getDataOffset ( id );
-    BufferToBitset<DATA_SIZE_BYTE> (traceData, tracewd->data);
+    BufferToBitset<DATA_SIZE_BYTE> (traceData, *(tracewd->data));
     buffer = ( T* ) ( ( char* ) fileoffset + getSampleOffset ( id, 0 ) );
     for ( unsigned long i = 0; i < SamplesPerTrace; i++ ) {
-        tracewd->trace.push_back((TraceValueType) buffer[i]);
+        (tracewd->trace)->push_back((TraceValueType) buffer[i]);
     }
 }
 
@@ -232,6 +232,8 @@ SamplesInput::bin1::~bin1()
 	}
     if (offsetUnmap){
         munmap ( fileoffset, RealFileSize );
+    } else {
+        free(fileoffset);
     }
 	close ( inputfd );
 }

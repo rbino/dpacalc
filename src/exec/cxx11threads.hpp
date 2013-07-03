@@ -27,6 +27,7 @@ namespace ExecMethod
 				cmd.add ( procArg );
 			};
 			virtual void RunAndWait ( unsigned long numberoftimes );
+            virtual void RunFilter ( unsigned long numberoftimes );
 		protected:
 			TCLAP::ValueArg<int> procArg;
 	};

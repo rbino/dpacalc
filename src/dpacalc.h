@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 typedef std::bitset<DATA_SIZE_BIT> DataValueType;
 
+
+
 #define DATA_SIZE_BYTE (DATA_SIZE_BIT >> 3)
 #define KEY_SIZE_BYTE (KEY_SIZE_BIT >> 3)
 #define KEYNUM (1 <<KEY_HYP_BIT)
@@ -42,8 +44,18 @@ typedef Eigen::Matrix<IntermediateValueType, Eigen::Dynamic, Eigen::Dynamic> Int
 typedef Eigen::Matrix<TraceValueType, Eigen::Dynamic, Eigen::Dynamic> PowerModelMatrix;
 typedef Eigen::Matrix<StatisticValueType, Eigen::Dynamic, Eigen::Dynamic> StatisticIndexMatrix;
 typedef struct {
-    DataValueType data;
-    Trace trace;
+    std::shared_ptr<DataValueType> data;
+    std::shared_ptr<Trace> trace;
 } TraceWithData;
+#pragma pack(push)
+#pragma pack(1)
+struct fileheaders {
+    uint32_t numtraces;
+    uint32_t numsamples_per_trace;
+    char datatype;
+    uint8_t knowndatalength;
+};
+#pragma pack(pop)
+
 
 
