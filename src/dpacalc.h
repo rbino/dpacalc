@@ -38,8 +38,8 @@ typedef float StatisticValueType;
 
 typedef Eigen::Matrix<TraceValueType, Eigen::Dynamic, BATCH_SIZE> TracesMatrix;
 typedef std::vector< DataValueType > DataMatrix;
-typedef std::vector< TraceValueType > Trace;
-typedef std::vector<std::complex<TraceValueType> > ComplexTrace;
+typedef Eigen::Matrix<TraceValueType, 1, Eigen::Dynamic> Trace;
+typedef Eigen::Matrix<std::complex<TraceValueType>, 1, Eigen::Dynamic> ComplexTrace;
 typedef Eigen::Matrix<IntermediateValueType, Eigen::Dynamic, Eigen::Dynamic> IntermediateValueMatrix;
 typedef Eigen::Matrix<TraceValueType, Eigen::Dynamic, Eigen::Dynamic> PowerModelMatrix;
 typedef Eigen::Matrix<StatisticValueType, Eigen::Dynamic, Eigen::Dynamic> StatisticIndexMatrix;

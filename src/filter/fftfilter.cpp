@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "fftfilter.hpp"
 
 void Filters::fftfilter::init(){
-    filter.reset(new Trace(SamplesPerTrace));
     SamplesPerTrace = input->SamplesPerTrace;
     NumTraces = input->NumTraces;
     config.open(filterConfArg.getValue().c_str());
@@ -90,14 +89,16 @@ void Filters::fftfilter::init(){
     }
     maxBin = 1;
     fftLength = nextPow2(SamplesPerTrace);
-    initializeToZero(filter, fftLength);
+    filter.reset(new Trace(fftLength));
+    *filter = Trace::Zero(fftLength);
+//    initializeToZero(filter, fftLength);
     generateWindows(filter, filterParamVect);
     debugPrint(filter, "/home/rbino/dpaoutput/filterDebug");
 }
 
 void Filters::fftfilter::initializeToZero(shared_ptr<Trace>& trace, unsigned long long length){
     for (unsigned long long i=0; i < length; i++){
-        trace->push_back(0);
+        (*trace) (i) = 0;
     }
 }
 
@@ -105,15 +106,12 @@ void Filters::fftfilter::applyFilter(shared_ptr<TraceWithData>& tracewd){
     FFT<TraceValueType> fft;
     shared_ptr<ComplexTrace> freqvec (new ComplexTrace(fftLength));
     unsigned long zeroPadLength = fftLength - SamplesPerTrace;
-    shared_ptr<Trace> zeroPad (new Trace(zeroPadLength));
-    initializeToZero(zeroPad, zeroPadLength);
     debugPrint(tracewd->trace, "/home/rbino/dpaoutput/preFftTrace");
-    (tracewd->trace)->insert((tracewd->trace)->end(), zeroPad->begin(), zeroPad->end());
+    (tracewd->trace)->conservativeResize(tracewd->trace->size()+zeroPadLength);
+    (tracewd->trace)->tail(zeroPadLength).setZero();
     fft.fwd(*freqvec, *(tracewd->trace));
     if (freqvec->size() == filter->size()){
-        for(unsigned int i=0; i<freqvec->size(); i++){
-            (*freqvec) [i] = (*freqvec) [i] * (*filter) [i];
-        }
+        (*freqvec) = freqvec->cwiseProduct(*filter);
     } else {
         cerr << "FFT length not equal to filter length" << endl;
         exit(3);
@@ -124,13 +122,10 @@ void Filters::fftfilter::applyFilter(shared_ptr<TraceWithData>& tracewd){
 }
 
 void Filters::fftfilter::debugPrint(shared_ptr<Trace>& trace, string filename){
-    int counter = 0;
     ofstream debug(filename);
     if (debug.is_open()){
-        BOOST_FOREACH(TraceValueType sample, *trace)
-        {
-         debug << counter << "\t" << sample << endl;
-         counter++;
+        for (int i=0; i < trace->size(); i++){
+            debug << i << "\t" << (*trace) (i) << endl;
         }
     }
 }
@@ -138,68 +133,62 @@ void Filters::fftfilter::debugPrint(shared_ptr<Trace>& trace, string filename){
 void Filters::fftfilter::generateWindows(shared_ptr<Trace>& filt, vector<filterParam>& parameters){
     for (vector<filterParam>::iterator windowParam = parameters.begin(); windowParam != parameters.end(); ++windowParam){
         int nBins = (int) ceil((windowParam->freq2 - windowParam->freq1)/fNyq * fftLength/2);
-        vector<TraceValueType> window;
+        Trace window(nBins);
         if (nBins == 1){
-            window.push_back(1);
+            window(1) = 1;
         } else {
             switch (windowParam->shape){
                 case RECT:
                     for (int n=0; n < nBins; n++){
-                        window.push_back(1);
+                        window(n) = 1;
                     }
                     break;
                 case HAMMING:
                     for (int n=0; n < nBins; n++){
-                        window.push_back( 0.54 - 0.46 * cos( (2*M_PI*n) / ( nBins-1 ) ) );
+                        window(n) = 0.54 - 0.46 * cos( (2*M_PI*n) / ( nBins-1 ) );
                     }
                     break;
                 case HANN:
                     for (int n=0; n < nBins; n++){
-                        window.push_back( 0.5 * (1 - cos(2*M_PI*n/(nBins-1))));
+                        window(n) = 0.5 * (1 - cos(2*M_PI*n/(nBins-1)));
                     }
                     break;
                 case TUKEY:
                     for (int n=0; n < nBins; n++)
                         if (n <= windowParam->tukeyAlpha*(nBins-1)/2){
-                            window.push_back( 0.5 * ( 1 + cos(M_PI * ((2*n/(windowParam->tukeyAlpha*(nBins-1)))-1))));
+                            window(n) = 0.5 * ( 1 + cos(M_PI * ((2*n/(windowParam->tukeyAlpha*(nBins-1)))-1)));
                         } else if (n <= (nBins-1)*(1-(windowParam->tukeyAlpha/2))) {
-                            window.push_back(1);
+                            window(n) = 1;
                         }   else {
-                            window.push_back(0.5 * ( 1 + cos(M_PI * ((2*n/(windowParam->tukeyAlpha*(nBins-1)))- (2/windowParam->tukeyAlpha) + 1))));
+                            window(n) = 0.5 * ( 1 + cos(M_PI * ((2*n/(windowParam->tukeyAlpha*(nBins-1)))- (2/windowParam->tukeyAlpha) + 1)));
                         }
                     break;
             }
         }
         int startBin = (int) ceil((windowParam->freq1 * fftLength/2) / fNyq);
         for (int n=0; n < nBins; n++){
-            combineFilter(startBin+n%fftLength, window[n]);
+            combineFilter((startBin+n)%fftLength, window(n));
         }
-
     }
 #if defined(CONFIG_FILTER_COMBINE_NORMALIZE)
-    for (unsigned long i=0; i<filter.size(); i++){
-        filter[i] = filter[i] / maxBin;
-    }
+    filter/=maxBin;
 #endif
-    std::size_t const nyquistBin = filter->size() / 2;
-    std::vector<TraceValueType> lower_half(filter->begin(), filter->begin() + nyquistBin + 1);
-    std::vector<TraceValueType> upper_half(lower_half);
-    upper_half.pop_back();
-    reverse(upper_half.begin(), upper_half.end());
-    upper_half.pop_back();
-    lower_half.insert(lower_half.end(), upper_half.begin(), upper_half.end());
-    *filter = lower_half;
+    unsigned long nyquistBin = filter->size() / 2;
+    filter->conservativeResize(nyquistBin);
+    Trace bilateralFilter(nyquistBin*2);
+    bilateralFilter << (*filter),filter->reverse();
+    (*filter) = bilateralFilter;
 }
 
 void Filters::fftfilter::combineFilter(unsigned long pos, TraceValueType windowValue){
-    (*filter) [pos] += windowValue;
+    (*filter) (pos) += windowValue;
 #if defined(CONFIG_FILTER_COMBINE_NORMALIZE)
-    if (filter[pos] > maxBin){
+    if (filter(pos) > maxBin){
         maxBin = filter[pos];
     }
 #elif defined(CONFIG_FILTER_COMBINE_CLAMP)
-    if ((*filter) [pos] > 1){
-        (*filter) [pos] = 1;
+    if ((*filter) (pos) > 1){
+        (*filter) (pos) = 1;
     }
 #endif
 }
