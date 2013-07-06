@@ -18,19 +18,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <thread>
 #include <unistd.h>
 #include "main.hpp"
+#include <functional>
 void prefetchthread();
 void threadfunction();
 void filterfunction();
 unsigned long batchmax = 0;
 unsigned long batchcur = 0;
-unsigned long filtercur = 0;
-unsigned long filtermax = 0;
+static std::function<void()> fun1 = NULL;
+static std::function<void()> fun2 = NULL;
 mutex cur_mutex;
 mutex filter_mutex;
-void ExecMethod::cxx11threads::RunAndWait ( unsigned long numberoftimes )
+void ExecMethod::cxx11threads::RunAndWait ( unsigned long numberoftimes, std::function<void()> f1, std::function<void()>  f2 )
 {
 	batchmax = numberoftimes;
 	batchcur = 0;
+    fun1 = f1;
+    fun2 = f2;
 	int numCPU = procArg.getValue();
 	if ( numCPU == 0 ) {
 		numCPU = sysconf ( _SC_NPROCESSORS_ONLN );
@@ -45,25 +48,11 @@ void ExecMethod::cxx11threads::RunAndWait ( unsigned long numberoftimes )
 	}
 }
 
-void ExecMethod::cxx11threads::RunFilter (unsigned long numberoftimes){
-    filtercur = 0;
-    filtermax = numberoftimes;
-    int numCPU = procArg.getValue();
-    if ( numCPU == 0 ) {
-        numCPU = sysconf ( _SC_NPROCESSORS_ONLN );
-    }
-    vector<thread> thrs;
-    for ( int i = 0; i < numCPU; i++ ) {
-        thrs.push_back ( thread ( filterfunction ) );
-    }
-    for ( auto t = thrs.begin(); t != thrs.end(); ++t ) {
-        t->join();
-    }
-}
-
 void prefetchthread()
 {
-	DPA::instance()->prefetch();
+    if (fun2) {
+        fun2();
+    }
 }
 
 void threadfunction()
@@ -77,21 +66,8 @@ void threadfunction()
 			break;
 		}
 		cur_mutex.unlock();
-		DPA::instance()->doRun();
-	}
-}
-
-void filterfunction()
-{
-    for ( ;; ) {
-        filter_mutex.lock();
-        if (filtercur < filtermax) {
-            ++filtercur;
-        } else {
-            filter_mutex.unlock();
-            break;
+        if (fun1){
+            fun1();
         }
-        filter_mutex.unlock();
-        DPA::instance()->doFilter();
-    }
+	}
 }

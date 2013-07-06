@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 #pragma once
 #include "dpacalc.h"
+#include <functional>
 
 namespace ExecMethod
 {
@@ -24,8 +25,7 @@ namespace ExecMethod
 		public:
 			base ( TCLAP::CmdLine& cmd ) {};
 			virtual void init() {};
-			virtual void RunAndWait ( unsigned long numberoftimes ) = 0; //What should I run? DPA::onRun(); called on the right thread.
-			virtual void RunFilter ( unsigned long numberoftimes ) = 0;
+            virtual void RunAndWait ( unsigned long numberoftimes, std::function<void()> f1, std::function<void()>  f2 ) = 0; //What should I run? DPA::onRun(); called on the right thread.
 	};
 
 }

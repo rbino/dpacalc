@@ -28,6 +28,10 @@ namespace Filters
 			base ( TCLAP::CmdLine& cmd, shared_ptr<SamplesInput::base> _input ) : input ( _input ) {};
             virtual void init() {};
 						virtual void applyFilter(shared_ptr<TraceWithData>& tracewd) = 0;
+						virtual void* getFilteredPointer(unsigned int& newsize) = 0;
+						virtual void initFilterOutput() = 0;
+            virtual void writeFilteredTrace(shared_ptr<TraceWithData> tracewd, unsigned int id) = 0;
+
           //  virtual void applyFilter() = 0;
 		protected:
 			shared_ptr<SamplesInput::base> input;

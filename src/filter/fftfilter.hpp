@@ -24,18 +24,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <iostream>
 #include <fstream>
 
-enum windowShape {
-    RECT,
-    HAMMING,
-    HANN,
-    TUKEY
-};
+
 
 using namespace Eigen;
 using namespace boost::property_tree;
 
 namespace Filters
 {
+    enum windowShape {
+        RECT,
+        HAMMING,
+        HANN,
+        TUKEY
+    };
+
     typedef struct {
         windowShape shape;
         double freq1;
@@ -43,22 +45,41 @@ namespace Filters
         double tukeyAlpha;
     } filterParam;
 
+    enum padType {
+        ZERO,
+        MEAN,
+        HOLD
+    };
+
     class fftfilter : public base
     {
         public:
             fftfilter ( TCLAP::CmdLine& cmd, shared_ptr<SamplesInput::base> _input) :
                 base ( cmd, _input ),
+#if defined(CONFIG_FILTER_OUTPUT_DISK)
+                filterOutFileConfArg("t", "filter-output", "Filter output file", false, "", "path"),
+#endif
                 filterConfArg ( "c", "filter-conf", "Filter configuration filename", false, "", "path")
                 { cmd.add(filterConfArg);
+#if defined(CONFIG_FILTER_OUTPUT_DISK)
+                  cmd.add(filterOutFileConfArg);
+#endif
                 };
             virtual void init();
             void applyFilter(shared_ptr<TraceWithData>& tracewd);
+            void initFilterOutput();
+            void writeFilteredTrace(shared_ptr<TraceWithData> tracewd, unsigned int id);
+            void* getFilteredPointer(unsigned int& newsize);
 
         protected:
+            TCLAP::ValueArg<std::string> filterOutFileConfArg;
             TCLAP::ValueArg<std::string> filterConfArg;
             ifstream config;
             vector<filterParam> filterParamVect;
             shared_ptr<Trace> filter;
+            mutex writeMutex;
+            padType padtype;
+            TraceValueType padding;
             void initializeToZero(shared_ptr<Trace>& filt, unsigned long long length);
             unsigned long long nextPow2(unsigned long long n){
                 return pow(2, ceil(log2(n)));
@@ -67,6 +88,7 @@ namespace Filters
             double fNyq;
             void generateWindows(shared_ptr<Trace>& filt, vector<filterParam>& parameters);
             void debugPrint(shared_ptr<Trace>& trace, string filename);
+            void debugPrint(shared_ptr<ComplexTrace>& trace, string filename);
             void combineFilter(unsigned long pos, TraceValueType windowValue);
             TraceValueType maxBin;
             unsigned long long getSampleOffset ( unsigned long long trace, unsigned long long samplenum ) {
@@ -81,5 +103,11 @@ namespace Filters
                 //trace and samplenum are zero-based
                 return sizeof ( struct fileheaders ) + NumTraces * ( sizeof(TraceValueType) * SamplesPerTrace + DATA_SIZE_BYTE );
             }
+#if defined(CONFIG_FILTER_OUTPUT_DISK)
+            ofstream outFile;
+            int outFd;
+#endif
+            void* outBuffer;
+
     };
 }
