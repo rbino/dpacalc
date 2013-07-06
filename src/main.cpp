@@ -25,31 +25,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 using namespace Eigen;
 using namespace std;
 
-void DPA::doRun() //BBQ-style. This method can be started multiple times in different threads. Elaborates BATCH_SIZE time samples, for each possible key value.
-{
-	unsigned long long myid;
-	shared_ptr<TracesMatrix> traces;
-	shared_ptr<StatisticIndexMatrix> sm;
-	int num = input->read ( &myid, &traces );
-	sm.reset ( new StatisticIndexMatrix ( num, KEYNUM ) );
-	stat->generate ( sm, traces, num );
-	outp->WriteBatch ( myid, sm );
-}
-
-void DPA::doFilter()
-{
-
-}
-
-void DPA::prefetch()
-{
-	while ( input->CurrentSample < input->SamplesPerTrace ) {
-		input->populateQueue();
-	}
-}
-
 int DPA::main ( int argc, char** argv )
 {
+    auto filtFunc = [&] {
+        shared_ptr<TraceWithData> trace(new TraceWithData);
+        traceMutex.lock();
+        input->readTraceWithData(trace, curTrace);
+        int localTrace = curTrace++;
+        traceMutex.unlock();
+        filter->applyFilter(trace);
+        filter->writeFilteredTrace(trace, localTrace);
+    };
+    auto prefetchFunc = [&] {
+        while ( input->CurrentSample < input->SamplesPerTrace ) {
+            input->populateQueue();
+        }
+    };
+    auto runFunc = [&] {
+        unsigned long long myid;
+        shared_ptr<TracesMatrix> traces;
+        shared_ptr<StatisticIndexMatrix> sm;
+        int num = input->read ( &myid, &traces );
+        sm.reset ( new StatisticIndexMatrix ( num, KEYNUM ) );
+        stat->generate ( sm, traces, num );
+        outp->WriteBatch ( myid, sm );
+    };
 	TCLAP::CmdLine cmd ( "DPA calc", ' ', VERSION );
 	exec = shared_ptr<ExecMethod::base> ( new ExecMethod::EXECCLASS ( cmd ) );
 	input = shared_ptr<SamplesInput::base> ( new SamplesInput::INPUTCLASS ( cmd ) );
@@ -69,7 +69,7 @@ int DPA::main ( int argc, char** argv )
 		return 1;
 	}
 	input->init();
-	timeval start, end;
+    timeval start, endfilter, end;
 	gettimeofday ( &start, NULL );
     if (filterSwitch.isSet()){
         filter->init();
@@ -80,10 +80,16 @@ int DPA::main ( int argc, char** argv )
 	interm->init();
 	genpm->init();
 	outp->init();
-/*    if (filterSwitch.isSet()){
-        // Apply filter
+    if (filterSwitch.isSet()){
+        filter->initFilterOutput();
+        curTrace = 0;
+        exec->RunAndWait(input->NumTraces, filtFunc, NULL);
+        unsigned int newsize;
+        void* newpointer = filter->getFilteredPointer(newsize);
+        input->changeFileOffset(newpointer, newsize);
+        gettimeofday ( &endfilter, NULL );
+        cout << "Filtering took " << timevaldiff ( &start, &endfilter ) << " milliseconds." << endl;
     }
-*/
 	numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
 	cout << "Reading known data..." << endl;
 	data = input->readData();
@@ -101,7 +107,7 @@ int DPA::main ( int argc, char** argv )
 	if ( sz % BATCH_SIZE > 0 ) { sz += ( BATCH_SIZE - ( sz % BATCH_SIZE ) ) ; }
 	stat->init ( pm );
 	cout << "Done. Starting statistic test pass 1 [multithreaded]" << endl;
-	exec->RunAndWait ( numbatches );
+    exec->RunAndWait ( numbatches,  runFunc, prefetchFunc);
 	gettimeofday ( &end, NULL );
 	outp->end();
 	cout << "Elaboration took " << timevaldiff ( &start, &end ) << " milliseconds." << endl;

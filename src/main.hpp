@@ -34,13 +34,10 @@ class DPA
 	public:
 
 		int main ( int argc, char** argv );
-		void doRun();
-        void doFilter();
-		void prefetch();
 		static DPA* instance() {
 			static DPA theInstance;
 			return &theInstance;
-		}
+        }
 	protected:
 		shared_ptr<DataMatrix> data;
 		shared_ptr<IntermediateValueMatrix> intval;
@@ -55,6 +52,8 @@ class DPA
 		shared_ptr<Statistic::base> stat;
 		shared_ptr<Output::base> outp;
 		virtual void ShowCompileTimeOptions();
+        unsigned long curTrace;
+        mutex traceMutex;
 	private:
 		DPA() {}
 };

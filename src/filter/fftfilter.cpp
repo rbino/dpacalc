@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 #include "fftfilter.hpp"
+#include <sys/mman.h>
+#include <fcntl.h>
 
 void Filters::fftfilter::init(){
     SamplesPerTrace = input->SamplesPerTrace;
@@ -28,6 +30,12 @@ void Filters::fftfilter::init(){
         }
         exit(3);
     }
+#if defined(CONFIG_FILTER_OUTPUT_DISK)
+    if (!filterOutFileConfArg.isSet()){
+        cerr << "Filter output file not set. Specify it with -t" << endl;
+        exit(3);
+    }
+#endif
     try
     {
         ptree pt;
@@ -36,6 +44,23 @@ void Filters::fftfilter::init(){
         {
             SamplingFrequency = pt.get<float>("samplingfrequency");
             fNyq = SamplingFrequency/2;
+            char pad = pt.get<char>("paddingtype");
+            switch(pad){
+                case 'z':
+                    padtype = ZERO;
+                    padding = 0;
+                    break;
+                case 'm':
+                    padtype = MEAN;
+                    break;
+                case 'h':
+                    padtype = HOLD;
+                    break;
+                default:
+                    cerr << "paddingtype must be z (zero), m (mean) or h (hold last value)" << endl;
+                    exit(3);
+            }
+
             ptree filters (pt.get_child("filters"));
             ptree::const_iterator itFilt;
             for ( itFilt = filters.begin(); itFilt != filters.end(); ++itFilt ){
@@ -91,24 +116,23 @@ void Filters::fftfilter::init(){
     fftLength = nextPow2(SamplesPerTrace);
     filter.reset(new Trace(fftLength));
     *filter = Trace::Zero(fftLength);
-//    initializeToZero(filter, fftLength);
     generateWindows(filter, filterParamVect);
-    debugPrint(filter, "/home/rbino/dpaoutput/filterDebug");
-}
-
-void Filters::fftfilter::initializeToZero(shared_ptr<Trace>& trace, unsigned long long length){
-    for (unsigned long long i=0; i < length; i++){
-        (*trace) (i) = 0;
-    }
+//    debugPrint(filter, "/home/rbino/dpaoutput/filterDebug");
 }
 
 void Filters::fftfilter::applyFilter(shared_ptr<TraceWithData>& tracewd){
     FFT<TraceValueType> fft;
     shared_ptr<ComplexTrace> freqvec (new ComplexTrace(fftLength));
-    unsigned long zeroPadLength = fftLength - SamplesPerTrace;
-    debugPrint(tracewd->trace, "/home/rbino/dpaoutput/preFftTrace");
-    (tracewd->trace)->conservativeResize(tracewd->trace->size()+zeroPadLength);
-    (tracewd->trace)->tail(zeroPadLength).setZero();
+    unsigned long padLength = fftLength - SamplesPerTrace;
+    if (padtype == MEAN){
+        padding = (tracewd->trace)->mean();
+    } else if (padtype == HOLD){
+        padding = (*tracewd->trace)(SamplesPerTrace-1);
+    }
+    Trace padTrace = Trace::Constant(padLength, padding);
+    Trace paddedTrace(fftLength);
+    paddedTrace << *(tracewd->trace),padTrace;
+    *(tracewd->trace) = paddedTrace;
     fft.fwd(*freqvec, *(tracewd->trace));
     if (freqvec->size() == filter->size()){
         (*freqvec) = freqvec->cwiseProduct(*filter);
@@ -117,8 +141,7 @@ void Filters::fftfilter::applyFilter(shared_ptr<TraceWithData>& tracewd){
         exit(3);
     }
     fft.inv(*(tracewd->trace), *freqvec);
-    (tracewd->trace)->resize(SamplesPerTrace);
-    debugPrint(tracewd->trace, "/home/rbino/dpaoutput/postFftTrace");
+    (tracewd->trace)->conservativeResize(SamplesPerTrace);
 }
 
 void Filters::fftfilter::debugPrint(shared_ptr<Trace>& trace, string filename){
@@ -128,6 +151,18 @@ void Filters::fftfilter::debugPrint(shared_ptr<Trace>& trace, string filename){
             debug << i << "\t" << (*trace) (i) << endl;
         }
     }
+    debug.close();
+}
+
+void Filters::fftfilter::debugPrint(shared_ptr<ComplexTrace>& trace, string filename){
+    ofstream debug(filename);
+    if (debug.is_open()){
+        for (int i=0; i < trace->size(); i++){
+            std::complex<TraceValueType> tmp = (*trace)(i);
+            debug << i << "\t" << abs(tmp) << endl;
+        }
+    }
+    debug.close();
 }
 
 void Filters::fftfilter::generateWindows(shared_ptr<Trace>& filt, vector<filterParam>& parameters){
@@ -191,5 +226,47 @@ void Filters::fftfilter::combineFilter(unsigned long pos, TraceValueType windowV
         (*filter) (pos) = 1;
     }
 #endif
+}
+
+void Filters::fftfilter::initFilterOutput(){
+#if defined(CONFIG_FILTER_OUTPUT_DISK)
+
+    outFd = open (filterOutFileConfArg.getValue().c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU | S_IRGRP | S_IROTH);
+    if (outFd == -1){
+        cerr << "Could not open filter output file" << endl;
+        exit(3);
+    }
+    lseek(outFd, getBufferDimension(), SEEK_SET);
+    write(outFd, "", 1);
+    outBuffer = mmap(NULL, getBufferDimension(), PROT_READ | PROT_WRITE, MAP_SHARED, outFd, 0);
+#elif defined(CONFIG_FILTER_OUTPUT_RAM)
+    outBuffer = malloc(getBufferDimension());
+    if (outBuffer ==  NULL){
+        cout << "Out of memory" << endl;
+        exit(3);
+    }
+#endif
+    struct fileheaders header;
+    header.numtraces = NumTraces;
+    header.numsamples_per_trace = SamplesPerTrace;
+#if defined(CONFIG_TRACETYPE_FLOAT)
+    header.datatype = 'f';
+#elif defined(CONFIG_TRACETYPE_DOUBLE)
+    header.datatype = 'd';
+#endif
+    header.knowndatalength = DATA_SIZE_BYTE;
+    memcpy(outBuffer, &header, sizeof(struct fileheaders));
+}
+
+void Filters::fftfilter::writeFilteredTrace(shared_ptr<TraceWithData> tracewd, unsigned int id){
+    writeMutex.lock();
+    memcpy((char*)outBuffer + getSampleOffset(id, 0), (tracewd->trace)->data(), (tracewd->trace)->size() * sizeof(TraceValueType) );
+    BitsetToBuffer<KEY_SIZE_BYTE>((*tracewd->data), (char*) outBuffer + getDataOffset(id));
+    writeMutex.unlock();
+}
+
+void* Filters::fftfilter::getFilteredPointer(unsigned int& newsize){
+    newsize = getBufferDimension();
+    return outBuffer;
 }
 

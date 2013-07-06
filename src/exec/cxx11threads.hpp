@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #pragma once
 #include "dpacalc.h"
 #include "base.hpp"
+#include <functional>
 
 namespace ExecMethod
 {
@@ -26,8 +27,7 @@ namespace ExecMethod
 			cxx11threads ( TCLAP::CmdLine& cmd ) : base ( cmd ), procArg ( "p", "processors", "Number of processors to use (0=autodetect)", false, 0, "int" ) {
 				cmd.add ( procArg );
 			};
-			virtual void RunAndWait ( unsigned long numberoftimes );
-            virtual void RunFilter ( unsigned long numberoftimes );
+            virtual void RunAndWait ( unsigned long numberoftimes, std::function<void()> f1, std::function<void()>  f2 );
 		protected:
 			TCLAP::ValueArg<int> procArg;
 	};
