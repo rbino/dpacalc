@@ -59,7 +59,7 @@ namespace Filters
 #if defined(CONFIG_FILTER_OUTPUT_DISK)
                 filterOutFileConfArg("t", "filter-output", "Filter output file", false, "", "path"),
 #endif
-                filterConfArg ( "c", "filter-conf", "Filter configuration filename", false, "", "path")
+                filterConfArg( "c", "filter-conf", "Filter configuration filename", false, "", "path")
                 { cmd.add(filterConfArg);
 #if defined(CONFIG_FILTER_OUTPUT_DISK)
                   cmd.add(filterOutFileConfArg);
@@ -72,7 +72,9 @@ namespace Filters
             void* getFilteredPointer(unsigned int& newsize);
 
         protected:
+#if defined(CONFIG_FILTER_OUTPUT_DISK)
             TCLAP::ValueArg<std::string> filterOutFileConfArg;
+#endif
             TCLAP::ValueArg<std::string> filterConfArg;
             ifstream config;
             vector<filterParam> filterParamVect;
