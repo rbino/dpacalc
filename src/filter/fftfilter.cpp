@@ -206,7 +206,7 @@ void Filters::fftfilter::generateWindows(shared_ptr<Trace>& filt, vector<filterP
         }
     }
 #if defined(CONFIG_FILTER_COMBINE_NORMALIZE)
-    filter/=maxBin;
+    *filter/=maxBin;
 #endif
     unsigned long nyquistBin = filter->size() / 2;
     filter->conservativeResize(nyquistBin);
@@ -218,8 +218,8 @@ void Filters::fftfilter::generateWindows(shared_ptr<Trace>& filt, vector<filterP
 void Filters::fftfilter::combineFilter(unsigned long pos, TraceValueType windowValue){
     (*filter) (pos) += windowValue;
 #if defined(CONFIG_FILTER_COMBINE_NORMALIZE)
-    if (filter(pos) > maxBin){
-        maxBin = filter[pos];
+    if ((*filter)(pos) > maxBin){
+        maxBin = (*filter)(pos);
     }
 #elif defined(CONFIG_FILTER_COMBINE_CLAMP)
     if ((*filter) (pos) > 1){
