@@ -236,8 +236,14 @@ void Filters::fftfilter::initFilterOutput(){
         cerr << "Could not open filter output file" << endl;
         exit(3);
     }
-    lseek(outFd, getBufferDimension(), SEEK_SET);
-    write(outFd, "", 1);
+    int seekRes;
+    int writeRes;
+    seekRes = lseek(outFd, getBufferDimension(), SEEK_SET);
+    writeRes = write(outFd, "", 1);
+    if (writeRes == -1 || seekRes == -1){
+        cerr << "Error inflating the file" << endl;
+        exit(3);
+    }
     outBuffer = mmap(NULL, getBufferDimension(), PROT_READ | PROT_WRITE, MAP_SHARED, outFd, 0);
 #elif defined(CONFIG_FILTER_OUTPUT_RAM)
     outBuffer = malloc(getBufferDimension());
