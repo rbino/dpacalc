@@ -34,7 +34,7 @@ typedef std::bitset<DATA_SIZE_BIT> DataValueType;
 typedef std::bitset<KEY_SIZE_BIT> KeyDataType;
 typedef unsigned long KeyIndexType;
 typedef unsigned long long IntermediateValueType;
-typedef float StatisticValueType;
+typedef TraceValueType StatisticValueType;
 
 typedef Eigen::Matrix<TraceValueType, Eigen::Dynamic, BATCH_SIZE> TracesMatrix;
 typedef std::vector< DataValueType > DataMatrix;

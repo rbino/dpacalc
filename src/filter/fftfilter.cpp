@@ -113,11 +113,12 @@ void Filters::fftfilter::init(){
         exit ( 3 );
     }
     maxBin = 1;
+    /* FFT padded to the next power of 2 to avoid boundary effects and to speed up computation.
+     * SamplesPerTrace+1 takes care of traces whose length is already a power of 2 */
     fftLength = nextPow2(SamplesPerTrace+1);
     filter.reset(new Trace(fftLength));
     *filter = Trace::Zero(fftLength);
     generateWindows(filter, filterParamVect);
-//    debugPrint(filter, "/home/rbino/dpaoutput/filterDebug");
 }
 
 void Filters::fftfilter::applyFilter(shared_ptr<TraceWithData>& tracewd){
@@ -141,6 +142,7 @@ void Filters::fftfilter::applyFilter(shared_ptr<TraceWithData>& tracewd){
         exit(3);
     }
     fft.inv(*(tracewd->trace), *freqvec);
+    /* Back to the original size, remove padding */
     (tracewd->trace)->conservativeResize(SamplesPerTrace);
 }
 
@@ -202,7 +204,7 @@ void Filters::fftfilter::generateWindows(shared_ptr<Trace>& filt, vector<filterP
         }
         int startBin = (int) ceil((windowParam->freq1 * fftLength/2) / fNyq);
         for (int n=0; n < nBins; n++){
-            combineFilter((startBin+n)%fftLength, window(n));
+            combineFilter((startBin+n)%fftLength, window(n));   //Modulo fftlength so the bins are placed circularly in the right position
         }
     }
 #if defined(CONFIG_FILTER_COMBINE_NORMALIZE)
@@ -219,6 +221,7 @@ void Filters::fftfilter::combineFilter(unsigned long pos, TraceValueType windowV
     (*filter) (pos) += windowValue;
 #if defined(CONFIG_FILTER_COMBINE_NORMALIZE)
     if ((*filter)(pos) > maxBin){
+        /* Check the highest value in the filter to normalize */
         maxBin = (*filter)(pos);
     }
 #elif defined(CONFIG_FILTER_COMBINE_CLAMP)
@@ -266,7 +269,7 @@ void Filters::fftfilter::initFilterOutput(){
 
 void Filters::fftfilter::writeFilteredTrace(shared_ptr<TraceWithData> tracewd, unsigned int id){
     writeMutex.lock();
-    memcpy((char*)outBuffer + getSampleOffset(id, 0), (tracewd->trace)->data(), (tracewd->trace)->size() * sizeof(TraceValueType) );
+    memcpy((char*)outBuffer + getTraceOffset(id), (tracewd->trace)->data(), (tracewd->trace)->size() * sizeof(TraceValueType) );
     BitsetToBuffer<KEY_SIZE_BYTE>((*tracewd->data), (char*) outBuffer + getDataOffset(id));
     writeMutex.unlock();
 }
