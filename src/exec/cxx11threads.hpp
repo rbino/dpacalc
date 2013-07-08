@@ -24,9 +24,16 @@ namespace ExecMethod
 	class cxx11threads: public base
 	{
 		public:
-			cxx11threads ( TCLAP::CmdLine& cmd ) : base ( cmd ), procArg ( "p", "processors", "Number of processors to use (0=autodetect)", false, 0, "int" ) {
+
+            cxx11threads ( TCLAP::CmdLine& cmd ) : base ( cmd ), procArg ( "p", "processors", "Number of processors to use (0=autodetect)", false, 0, "int" ) {
 				cmd.add ( procArg );
 			};
+            /**
+             * @brief RunAndWait Runs f1 once and f2 numberoftimes times in different threads
+             * @param numberoftimes The number of times to run f2
+             * @param f1 The function to be executed once in a single thread. If it's NULL, nothing it's executed in its thread.
+             * @param f2 The function to be executed numberoftimes times in a thread per CPU core. If it's NULL, nothing it's executed in its threads.
+             */
             virtual void RunAndWait ( unsigned long numberoftimes, std::function<void()> f1, std::function<void()>  f2 );
 		protected:
 			TCLAP::ValueArg<int> procArg;

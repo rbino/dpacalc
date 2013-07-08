@@ -81,6 +81,7 @@ int DPA::main ( int argc, char** argv )
 	genpm->init();
 	outp->init();
     if (filterSwitch.isSet()){
+        cout << "Filtering..." << endl;
         filter->initFilterOutput();
         curTrace = 0;
         exec->RunAndWait(input->NumTraces, filtFunc, NULL);
@@ -89,6 +90,7 @@ int DPA::main ( int argc, char** argv )
         input->changeFileOffset(newpointer, newsize);
         gettimeofday ( &endfilter, NULL );
         cout << "Filtering took " << timevaldiff ( &start, &endfilter ) << " milliseconds." << endl;
+        cout << "Done. ";
     }
 	numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
 	cout << "Reading known data..." << endl;

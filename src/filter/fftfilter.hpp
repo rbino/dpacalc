@@ -54,6 +54,11 @@ namespace Filters
     class fftfilter : public base
     {
         public:
+             /**
+             * @brief fftfilter Creates an instance of the fftfilter class
+             * @param cmd The TCLAP::CmdLine which is used to add command line arguments
+             * @param _input A shared_ptr to the input class instance created in the main
+             */
             fftfilter ( TCLAP::CmdLine& cmd, shared_ptr<SamplesInput::base> _input) :
                 base ( cmd, _input ),
 #if defined(CONFIG_FILTER_OUTPUT_DISK)
@@ -66,9 +71,26 @@ namespace Filters
 #endif
                 };
             virtual void init();
+            /**
+             * @brief applyFilter Applies the member filter to the trace (coefficient wise multiplication)
+             * @param tracewd shared_ptr to the TraceWithData you want to apply the filter to (only the Trace is affected)
+             */
             void applyFilter(shared_ptr<TraceWithData>& tracewd);
+            /**
+             * @brief initFilterOutput Initializes the file or buffer (depending on the config) in which the filtered input is written
+             */
             void initFilterOutput();
+            /**
+             * @brief writeFilteredTrace Writes the filtered trace to the output file or buffer (depending on the config)
+             * @param tracewd The trace you want to write to the output
+             * @param id The progressive id of the trace (to calculate the offset)
+             */
             void writeFilteredTrace(shared_ptr<TraceWithData> tracewd, unsigned int id);
+            /**
+             * @brief getFilteredPointer Returns the void* pointer to the mmaped file or the buffer (depending on the config) which points to the filtered input and sets the new size
+             * @param newsize This variable (passed by reference) is set to the new size of the input
+             * @return the void* pointer to the mmaped file or the buffer (depending on the config) which points to the filtered input
+             */
             void* getFilteredPointer(unsigned int& newsize);
 
         protected:
@@ -82,25 +104,63 @@ namespace Filters
             mutex writeMutex;
             padType padtype;
             TraceValueType padding;
-            void initializeToZero(shared_ptr<Trace>& filt, unsigned long long length);
+            /**
+             * @brief nextPow2 Calculates the next power of 2 of n
+             * @param n The number which we want to increase to the next power of 2
+             * @return the next power of 2 of n
+             */
             unsigned long long nextPow2(unsigned long long n){
                 return pow(2, ceil(log2(n)));
             }
             unsigned long long fftLength;
             double fNyq;
+            /**
+             * @brief generateWindows Generates filter Windows and puts it in the filter
+             * @param filt shared_ptr to the filter to be generated
+             * @param parameters Vector of filterParam for the generation of the windows
+             */
             void generateWindows(shared_ptr<Trace>& filt, vector<filterParam>& parameters);
+            /**
+             * @brief debugPrint Utility function to print the values of a Trace (filter or trace) in a gnuplot friendly format
+             * @param trace shared_ptr to the trace you want to print
+             * @param filename Output filename
+             */
             void debugPrint(shared_ptr<Trace>& trace, string filename);
+            /**
+             * @brief debugPrint Utility function to print the absolute values of a ComplexTrace (fft) in a gnuplot friendly format
+             * @param trace shared_ptr to the ComplexTrace you want to print
+             * @param filename Output filename
+             */
             void debugPrint(shared_ptr<ComplexTrace>& trace, string filename);
+            /**
+             * @brief combineFilter Combines (depending on the config) the filter bin in position pos with the calculated windowValue
+             * @param pos The index of the filter bin which you want to combine with the window value
+             * @param windowValue The calculated window value
+             */
             void combineFilter(unsigned long pos, TraceValueType windowValue);
             TraceValueType maxBin;
-            unsigned long long getSampleOffset ( unsigned long long trace, unsigned long long samplenum ) {
+            /**
+             * @brief getTraceOffset Returns the trace offset in the output buffer (or file)
+             * @param trace The progressive id of the trace
+             * @return The offset corresponding to the beginning of the trace with the passed id
+             */
+            unsigned long long getTraceOffset ( unsigned long long trace ) {
                 //trace and samplenum are zero-based
-                return sizeof ( struct fileheaders ) + trace * ( sizeof(TraceValueType) * SamplesPerTrace + DATA_SIZE_BYTE ) + sizeof(TraceValueType) * samplenum;
+                return sizeof ( struct fileheaders ) + trace * ( sizeof(TraceValueType) * SamplesPerTrace + DATA_SIZE_BYTE );
             }
+            /**
+             * @brief getDataOffset Returns the data offset in the output buffer (or file)
+             * @param trace The progressive id of the trace
+             * @return The offset corresponding to the beginning of the data with the passed id
+             */
             unsigned long long getDataOffset ( unsigned long long trace ) {
                 //trace and samplenum are zero-based
                 return sizeof ( struct fileheaders ) + trace * ( sizeof(TraceValueType) * SamplesPerTrace + DATA_SIZE_BYTE ) + sizeof(TraceValueType) * SamplesPerTrace;
             }
+            /**
+             * @brief getBufferDimension Calculates the buffer dimension to allocate the output buffer (or file)
+             * @return The buffer (or file) dimension
+             */
             unsigned long long getBufferDimension () {
                 //trace and samplenum are zero-based
                 return sizeof ( struct fileheaders ) + NumTraces * ( sizeof(TraceValueType) * SamplesPerTrace + DATA_SIZE_BYTE );
