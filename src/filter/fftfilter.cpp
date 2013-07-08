@@ -113,7 +113,7 @@ void Filters::fftfilter::init(){
         exit ( 3 );
     }
     maxBin = 1;
-    fftLength = nextPow2(SamplesPerTrace);
+    fftLength = nextPow2(SamplesPerTrace+1);
     filter.reset(new Trace(fftLength));
     *filter = Trace::Zero(fftLength);
     generateWindows(filter, filterParamVect);
