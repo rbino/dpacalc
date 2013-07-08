@@ -61,7 +61,17 @@ namespace SamplesInput
 			virtual void init();
 			~bin1();
 			shared_ptr<DataMatrix> readData();
+            /**
+             * @brief readTraceWithData Reads a trace with the associated data
+             * @param tracewd shared_ptr the the trace which is filled by the function
+             * @param id The progressive id of the trace
+             */
             void readTraceWithData(shared_ptr<TraceWithData>& tracewd, unsigned long id);
+            /**
+             * @brief changeFileOffset Changes the fileoffset member variable (a pointer that points to the input traces)
+             * @param newOffset The new pointer, which will point to the filtered traces
+             * @param newSize The new size of the buffer (or mmaped file)
+             */
             void changeFileOffset(void* newOffset, long long newSize);
 		protected:
 			TCLAP::ValueArg<std::string> nameArg;
