@@ -79,6 +79,10 @@ void Filters::fftfilter::init(){
                     case 't':
                         param.shape = TUKEY;
                         param.tukeyAlpha = itFilt->second.get<double>("alpha", 0.5);
+                        if (param.tukeyAlpha <= 0){
+                            cerr << "alpha must be > 0" << endl;
+                            exit(3);
+                        }
                         break;
                     default:
                         cerr << "Filter configuration error: Window shape must be r, h, H or t" << endl;
