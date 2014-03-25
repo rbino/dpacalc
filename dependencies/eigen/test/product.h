@@ -3,24 +3,9 @@
 //
 // Copyright (C) 2006-2008 Benoit Jacob <jacob.benoit.1@gmail.com>
 //
-// Eigen is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 3 of the License, or (at your option) any later version.
-//
-// Alternatively, you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of
-// the License, or (at your option) any later version.
-//
-// Eigen is distributed in the hope that it will be useful, but WITHOUT ANY
-// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-// FOR A PARTICULAR PURPOSE.f See the GNU Lesser General Public License or the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License and a copy of the GNU General Public License along with
-// Eigen. If not, see <http://www.gnu.org/licenses/>.
+// This Source Code Form is subject to the terms of the Mozilla
+// Public License v. 2.0. If a copy of the MPL was not distributed
+// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "main.h"
 #include <Eigen/QR>
@@ -39,7 +24,6 @@ template<typename MatrixType> void product(const MatrixType& m)
   */
   typedef typename MatrixType::Index Index;
   typedef typename MatrixType::Scalar Scalar;
-  typedef typename NumTraits<Scalar>::NonInteger NonInteger;
   typedef Matrix<Scalar, MatrixType::RowsAtCompileTime, 1> RowVectorType;
   typedef Matrix<Scalar, MatrixType::ColsAtCompileTime, 1> ColVectorType;
   typedef Matrix<Scalar, MatrixType::RowsAtCompileTime, MatrixType::RowsAtCompileTime> RowSquareMatrixType;
@@ -54,8 +38,7 @@ template<typename MatrixType> void product(const MatrixType& m)
   // to test it, hence I consider that we will have tested Random.h
   MatrixType m1 = MatrixType::Random(rows, cols),
              m2 = MatrixType::Random(rows, cols),
-             m3(rows, cols),
-             mzero = MatrixType::Zero(rows, cols);
+             m3(rows, cols);
   RowSquareMatrixType
              identity = RowSquareMatrixType::Identity(rows, rows),
              square = RowSquareMatrixType::Random(rows, rows),
@@ -63,9 +46,7 @@ template<typename MatrixType> void product(const MatrixType& m)
   ColSquareMatrixType
              square2 = ColSquareMatrixType::Random(cols, cols),
              res2 = ColSquareMatrixType::Random(cols, cols);
-  RowVectorType v1 = RowVectorType::Random(rows),
-             v2 = RowVectorType::Random(rows),
-             vzero = RowVectorType::Zero(rows);
+  RowVectorType v1 = RowVectorType::Random(rows);
   ColVectorType vc2 = ColVectorType::Random(cols), vcres(cols);
   OtherMajorMatrixType tm1 = m1;
 
