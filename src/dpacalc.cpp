@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <iostream>
 #include <fstream>
 #include "includes.h"
-#include "main.hpp"
+#include "dpacalc.hpp"
 #include <sys/time.h>
 #define VERSION "1.0beta"
 using namespace Eigen;
