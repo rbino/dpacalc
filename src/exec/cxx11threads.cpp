@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "cxx11threads.hpp"
 #include <thread>
 #include <unistd.h>
-#include "main.hpp"
+#include "dpacalc.hpp"
 #include <functional>
 void prefetchthread();
 void threadfunction();

@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 #include "seq_monocore.hpp"
-#include "main.hpp"
+#include "dpacalc.hpp"
 
 void ExecMethod::seq_monocore::RunAndWait ( unsigned long numberoftimes )
 {
