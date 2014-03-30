@@ -57,6 +57,7 @@ void SamplesInput::bin1::init()
 	}
 	SamplesPerTrace = header.numsamples_per_trace;
 	NumTraces = header.numtraces;
+    RealNumTraces = header.numtraces;
 	switch ( header.datatype ) {
 		case 'b':
 			samplesize = 1;
@@ -238,4 +239,19 @@ SamplesInput::bin1::~bin1()
         free(fileoffset);
     }
 	close ( inputfd );
+}
+
+void SamplesInput::bin1::changeNumTraces(unsigned long long newNum){
+    if (newNum < RealNumTraces){
+        NumTraces = newNum;
+    } else {
+        NumTraces = RealNumTraces;
+    }
+}
+
+void SamplesInput::bin1::reinit(){
+    CurrentSample = 0;
+    CurrentTrace = 0;
+    CurrentId = -1;
+    data.reset();
 }
