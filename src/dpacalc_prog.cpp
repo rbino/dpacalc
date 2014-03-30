@@ -58,7 +58,7 @@ int DPA::main ( int argc, char** argv )
 	interm = shared_ptr<GenerateIntermediateValues::base> ( new GenerateIntermediateValues::GENINTERMCLASS ( cmd, keygen ) );
 	genpm = shared_ptr<GeneratePowerModel::base> ( new GeneratePowerModel::GENPOWERMODELCLASS ( cmd ) );
 	stat = shared_ptr<Statistic::base> ( new Statistic::STATISTICCLASS ( cmd ) );
-	outp = shared_ptr<Output::base> ( new Output::OUTPUTCLASS ( cmd, keygen ) );
+    outp = shared_ptr<Output::base> ( new Output::OUTPUTPROGCLASS ( cmd, keygen ) );
     TCLAP::SwitchArg filterSwitch("i", "filter-input", "If set, the input is filtered. You must provide a configuration file with -c");
     cmd.add(filterSwitch);
 	this->ShowCompileTimeOptions();
@@ -143,7 +143,7 @@ void DPA::ShowCompileTimeOptions()
 	cout << "Name of the class that generates power model: " << GENPOWERMODELCLASS_STR << endl;
 	cout << "Name of the class that calculates statistic data: " << STATISTICCLASS_STR << endl;
 	cout << "Name of the class that manages parallelization: " << EXECCLASS_STR << endl;
-	cout << "Name of the class that writes output: " << OUTPUTCLASS_STR << endl;
+    cout << "Name of the class that writes output: " << OUTPUTPROGCLASS_STR << endl;
 	cout << endl;
 }
 

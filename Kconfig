@@ -107,4 +107,8 @@ config CLASS_EXEC
 config CLASS_OUTPUT
 	  string "Name of the class that writes output data"
 	  default "multiple"
+
+config CLASS_OUTPUT_PROG
+	  string "Name of the class that writes output data in dpacalc_prog"
+	  default "gnuplot_prog"
 endmenu
