@@ -73,6 +73,12 @@ namespace SamplesInput
              * @param newSize The new size of the buffer (or mmaped file)
              */
             void changeFileOffset(void* newOffset, long long newSize);
+            /**
+             * @brief changeNumTraces Changes the number of traces to be processed
+             * @param newOffset The new number of traces
+             */
+            void changeNumTraces(unsigned long long newNum);
+            void reinit();
 		protected:
 			TCLAP::ValueArg<std::string> nameArg;
 			TCLAP::SwitchArg mlockArg;
