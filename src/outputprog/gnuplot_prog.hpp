@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2012	Massimo Maggi
+Copyright (C) 2014	Riccardo Binetti
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,30 +21,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <map>
 #include <mutex>
 using namespace std;
-namespace Output
+namespace OutputProg
 {
     class gnuplot_prog: public base
 	{
 		public:
             gnuplot_prog ( TCLAP::CmdLine& cmd, shared_ptr<KeyGenerators::base> _keygen ) : base ( cmd, _keygen ),
-				dataNameArg ( "o", "output", "Gnuplot data file name", true, "", "path" ),
-				scriptNameArg ( "s", "script-output", "Gnuplot script output file name", true, "", "path" ), wqueue(), queueMutex() {
-				doneId = -1;
+                dataNameArg ( "o", "output", "Gnuplot progressive data file name", true, "", "path" ),
+                scriptNameArg ( "s", "script-output", "Gnuplot script output file name", true, "", "path" ), bestPearson() {
+                bestPearson = Trace::Zero(KEYNUM);
 				cmd.add ( dataNameArg );
 				cmd.add ( scriptNameArg );
+                currentTraces = 0;
 			};
 			virtual void init();
 			virtual void end();
 			virtual void WriteBatch ( unsigned long long id, shared_ptr<StatisticIndexMatrix>& s );
+			virtual void endTraceBlock();
 		protected:
 			TCLAP::ValueArg<std::string> dataNameArg;
 			TCLAP::ValueArg<std::string> scriptNameArg;
 			std::ofstream dataoutp;
-			unsigned long long doneId;
-			std::map<unsigned long long, shared_ptr<StatisticIndexMatrix>> wqueue;
-			std::mutex queueMutex;
-			virtual void RealWriteBatch ( unsigned long long id, shared_ptr<StatisticIndexMatrix>& s );
-			virtual void emptyQueue();
+            Eigen::Matrix <StatisticValueType, 1, KEYNUM > bestPearson;
+            std::mutex checkMutex;
+
 	};
 
 }

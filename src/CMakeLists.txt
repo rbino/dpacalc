@@ -20,7 +20,7 @@ set(powermodelsources gen_powermodel/${CONFIG_CLASS_POWERMODEL}.cpp)
 set(statisticsources statisticaltest/${CONFIG_CLASS_STATISTIC}.cpp)
 set(execsources exec/${CONFIG_CLASS_EXEC}.cpp)
 set(outputsources output/${CONFIG_CLASS_OUTPUT}.cpp)
-set(outputprogsources output/${CONFIG_CLASS_OUTPUT_PROG}.cpp)
+set(outputprogsources outputprog/${CONFIG_CLASS_OUTPUT_PROG}.cpp)
 
 include( input/${CONFIG_CLASS_INPUT}.cmake OPTIONAL )
 include( filter/${CONFIG_CLASS_FILTER}.cmake OPTIONAL )
@@ -30,7 +30,7 @@ include( gen_powermodel/${CONFIG_CLASS_POWERMODEL}.cmake OPTIONAL )
 include( statisticaltest/${CONFIG_CLASS_STATISTIC}.cmake OPTIONAL )
 include( exec/${CONFIG_CLASS_EXEC}.cmake OPTIONAL )
 include( output/${CONFIG_CLASS_OUTPUT}.cmake OPTIONAL )
-include( output/${CONFIG_CLASS_OUTPUT_PROG}.cmake OPTIONAL )
+include( outputprog/${CONFIG_CLASS_OUTPUT_PROG}.cmake OPTIONAL )
 
 
 
