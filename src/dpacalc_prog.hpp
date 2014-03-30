@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2012	Massimo Maggi
+Copyright (C) 2014 Riccardo Binetti
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "gen_powermodel/base.hpp"
 #include "statisticaltest/base.hpp"
 #include "exec/base.hpp"
-#include "output/base.hpp"
+#include "outputprog/base.hpp"
 
 using namespace Eigen;
 using namespace std;
@@ -45,12 +45,12 @@ class DPA
 		unsigned long numbatches;
 		shared_ptr<ExecMethod::base> exec;
 		shared_ptr<SamplesInput::base> input;
-        shared_ptr<Filters::base> filter;
+        // shared_ptr<Filters::base> filter;
 		shared_ptr<KeyGenerators::base> keygen;
 		shared_ptr<GenerateIntermediateValues::base> interm;
 		shared_ptr<GeneratePowerModel::base> genpm;
 		shared_ptr<Statistic::base> stat;
-		shared_ptr<Output::base> outp;
+        shared_ptr<OutputProg::base> outp;
 		virtual void ShowCompileTimeOptions();
         unsigned long curTrace;
         mutex traceMutex;

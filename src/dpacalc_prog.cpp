@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2012	Massimo Maggi
+Copyright (C) 2014 Riccardo Binetti
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <iostream>
 #include <fstream>
 #include "includes.h"
-#include "dpacalc.hpp"
+#include "dpacalc_prog.hpp"
 #include <sys/time.h>
 #define VERSION "1.0beta"
 using namespace Eigen;
@@ -27,6 +27,7 @@ using namespace std;
 
 int DPA::main ( int argc, char** argv )
 {
+    /*
     auto filtFunc = [&] {
         shared_ptr<TraceWithData> trace(new TraceWithData);
         traceMutex.lock();
@@ -36,6 +37,7 @@ int DPA::main ( int argc, char** argv )
         filter->applyFilter(trace);
         filter->writeFilteredTrace(trace, localTrace);
     };
+    */
     auto prefetchFunc = [&] {
         while ( input->CurrentSample < input->SamplesPerTrace ) {
             input->populateQueue();
@@ -53,33 +55,38 @@ int DPA::main ( int argc, char** argv )
 	TCLAP::CmdLine cmd ( "DPA calc", ' ', VERSION );
 	exec = shared_ptr<ExecMethod::base> ( new ExecMethod::EXECCLASS ( cmd ) );
 	input = shared_ptr<SamplesInput::base> ( new SamplesInput::INPUTCLASS ( cmd ) );
-    filter = shared_ptr<Filters::base> ( new Filters::FILTERCLASS ( cmd, input ) );
+    // filter = shared_ptr<Filters::base> ( new Filters::FILTERCLASS ( cmd, input ) );
 	keygen = shared_ptr<KeyGenerators::base> ( new KeyGenerators::KEYGENCLASS ( cmd ) );
 	interm = shared_ptr<GenerateIntermediateValues::base> ( new GenerateIntermediateValues::GENINTERMCLASS ( cmd, keygen ) );
 	genpm = shared_ptr<GeneratePowerModel::base> ( new GeneratePowerModel::GENPOWERMODELCLASS ( cmd ) );
 	stat = shared_ptr<Statistic::base> ( new Statistic::STATISTICCLASS ( cmd ) );
-    outp = shared_ptr<Output::base> ( new Output::OUTPUTPROGCLASS ( cmd, keygen ) );
+    outp = shared_ptr<OutputProg::base> ( new OutputProg::OUTPUTPROGCLASS ( cmd, keygen ) );
     TCLAP::SwitchArg filterSwitch("i", "filter-input", "If set, the input is filtered. You must provide a configuration file with -c");
-    cmd.add(filterSwitch);
+    TCLAP::ValueArg<int> traceJump("t", "add-traces", "How many traces are added at every progressive round", true, 0, "1-KEYNUM");
+    // cmd.add(filterSwitch);
+    cmd.add(traceJump);
 	this->ShowCompileTimeOptions();
 	try {
 		cmd.parse ( argc, argv );
 	} catch ( TCLAP::ArgException& e ) {
 		cerr << "Error " << e.error() << " in command line argument " << e.argId() << std::endl;
 		return 1;
-	}
-	input->init();
-    timeval start, endfilter, end;
+    }
+    input->init();
+    timeval start, end; // endfilter
 	gettimeofday ( &start, NULL );
+    /*
     if (filterSwitch.isSet()){
         filter->init();
     } else {
         filter.reset();
     }
-	keygen->init();
-	interm->init();
-	genpm->init();
+    */
+    keygen->init();
+    interm->init();
+    genpm->init();
 	outp->init();
+    /*
     if (filterSwitch.isSet()){
         cout << "Filtering..." << endl;
         filter->initFilterOutput();
@@ -92,24 +99,31 @@ int DPA::main ( int argc, char** argv )
         cout << "Filtering took " << timevaldiff ( &start, &endfilter ) << " milliseconds." << endl;
         cout << "Done. ";
     }
-	numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
-	cout << "Reading known data..." << endl;
-	data = input->readData();
-	cout << "Done. Calculating intermediate values.....[single threaded]" << endl;
-	intval.reset (  new IntermediateValueMatrix ( input->NumTraces, KEYNUM ) );
-	interm->generate ( data, intval );
-    data.reset(); // tracewd->I don't need that data anymore.
-	cout << "Done. Calculating power model.....[single threaded]" << endl;
-	pm.reset ( new PowerModelMatrix ( input->NumTraces, KEYNUM ) );
-	genpm->generate ( intval, pm );
-	intval.reset(); // I don't need that data anymore, let's free some memory!
-	cout << "Done. Initializing statistic test [single threaded]:" << endl;
-	// StatisticIndexMatrix size should be a multiple of BATCH_SIZE
-	unsigned long sz = input->SamplesPerTrace;
-	if ( sz % BATCH_SIZE > 0 ) { sz += ( BATCH_SIZE - ( sz % BATCH_SIZE ) ) ; }
-	stat->init ( pm );
-	cout << "Done. Starting statistic test pass 1 [multithreaded]" << endl;
-    exec->RunAndWait ( numbatches,  runFunc, prefetchFunc);
+    */
+    input->NumTraces = 0;
+    while(input->NumTraces < input->RealNumTraces){
+        input->reinit();
+        // changeNumTraces clamps the number of traces to RealNumTraces
+        input->changeNumTraces(input->NumTraces+traceJump.getValue());
+        outp->currentTraces = input->NumTraces;
+        numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
+        cout << "dpacalc_prog: now processing " << input->NumTraces << " traces...";
+        cout.flush();
+        data = input->readData();
+        intval.reset (  new IntermediateValueMatrix ( input->NumTraces, KEYNUM ) );
+        interm->generate ( data, intval );
+        data.reset(); // tracewd->I don't need that data anymore.
+        pm.reset ( new PowerModelMatrix ( input->NumTraces, KEYNUM ) );
+        genpm->generate ( intval, pm );
+        intval.reset(); // I don't need that data anymore, let's free some memory!
+        // StatisticIndexMatrix size should be a multiple of BATCH_SIZE
+        unsigned long sz = input->SamplesPerTrace;
+        if ( sz % BATCH_SIZE > 0 ) { sz += ( BATCH_SIZE - ( sz % BATCH_SIZE ) ) ; }
+        stat->init ( pm );
+        exec->RunAndWait ( numbatches,  runFunc, prefetchFunc);
+        outp->endTraceBlock();
+        cout << " Done!" << endl;
+    }
 	gettimeofday ( &end, NULL );
 	outp->end();
 	cout << "Elaboration took " << timevaldiff ( &start, &end ) << " milliseconds." << endl;
@@ -117,7 +131,7 @@ int DPA::main ( int argc, char** argv )
 }
 void DPA::ShowCompileTimeOptions()
 {
-	cout << "DPAcalc was compiled with : " << endl;
+    cout << "DPAcalc_prog was compiled with : " << endl;
 	cout << "Batch size : " << BATCH_SIZE << endl;
 	cout << "Number of bit of the key to guess : " << KEY_HYP_BIT << endl;
 	cout << "Size of known data : " << DATA_SIZE_BIT << " bit " << endl;
@@ -143,7 +157,7 @@ void DPA::ShowCompileTimeOptions()
 	cout << "Name of the class that generates power model: " << GENPOWERMODELCLASS_STR << endl;
 	cout << "Name of the class that calculates statistic data: " << STATISTICCLASS_STR << endl;
 	cout << "Name of the class that manages parallelization: " << EXECCLASS_STR << endl;
-    cout << "Name of the class that writes output: " << OUTPUTPROGCLASS_STR << endl;
+    cout << "Name of the class that writes progressive output: " << OUTPUTPROGCLASS_STR << endl;
 	cout << endl;
 }
 
