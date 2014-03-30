@@ -23,3 +23,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "statisticaltest/${CONFIG_CLASS_STATISTIC}.hpp"
 #include "exec/${CONFIG_CLASS_EXEC}.hpp"
 #include "output/${CONFIG_CLASS_OUTPUT}.hpp"
+#include "output/${CONFIG_CLASS_OUTPUT_PROG}.hpp"
