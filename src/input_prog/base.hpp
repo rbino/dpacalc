@@ -21,13 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 using namespace Eigen;
 using namespace std;
-namespace SamplesInput
+namespace SamplesInputProg
 {
 	class base
 	{
 		public:
 			unsigned long long SamplesPerTrace; //from metadata, dimension N of matrix T
-			unsigned long long NumTraces; //dimension N of matrix T
+			unsigned long long NumTraces; //virtual dimension N of matrix T (changes during dpacalc_prog)
+			unsigned long long RealNumTraces;	//dimension N of matrix T
 			unsigned long long CurrentSample;  //dimension N of matrix T
 			unsigned long long CurrentTrace;
 			base ( TCLAP::CmdLine& cmd ) {};
@@ -43,7 +44,8 @@ namespace SamplesInput
 			virtual void populateQueue() {};
 			virtual void readTraceWithData(shared_ptr<TraceWithData>& tracewd, unsigned long id) = 0;
 			virtual void changeFileOffset(void* newOffset, long long newSize) = 0;
-
+			virtual void changeNumTraces(unsigned long long newNum) = 0;
+			virtual void reinit() = 0;  // Reinitializes CurrentSample, CurrentId, CurrentTrace and data. NumTraces and SamplesPerTrace are not touched.
 		protected:
 			shared_ptr<DataMatrix> data;
 			unsigned long long CurrentId;

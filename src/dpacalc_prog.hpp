@@ -17,14 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #pragma once
 #include "dpacalc.h"
 #include <mutex>
-#include "input/base.hpp"
+#include "input_prog/base.hpp"
 #include "filter/base.hpp"
 #include "keygen/base.hpp"
-#include "gen_intermediate/base.hpp"
-#include "gen_powermodel/base.hpp"
+#include "gen_intermediate_prog/base.hpp"
+#include "gen_powermodel_prog/base.hpp"
 #include "statisticaltest/base.hpp"
 #include "exec/base.hpp"
-#include "outputprog/base.hpp"
+#include "output_prog/base.hpp"
 
 using namespace Eigen;
 using namespace std;
@@ -44,11 +44,11 @@ class DPA
 		shared_ptr<PowerModelMatrix> pm;
 		unsigned long numbatches;
 		shared_ptr<ExecMethod::base> exec;
-		shared_ptr<SamplesInput::base> input;
+		shared_ptr<SamplesInputProg::base> input;
         // shared_ptr<Filters::base> filter;
 		shared_ptr<KeyGenerators::base> keygen;
-		shared_ptr<GenerateIntermediateValues::base> interm;
-		shared_ptr<GeneratePowerModel::base> genpm;
+		shared_ptr<GenerateIntermediateValuesProg::base> interm;
+		shared_ptr<GeneratePowerModelProg::base> genpm;
 		shared_ptr<Statistic::base> stat;
         shared_ptr<OutputProg::base> outp;
 		virtual void ShowCompileTimeOptions();

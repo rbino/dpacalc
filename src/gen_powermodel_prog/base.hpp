@@ -15,16 +15,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 #pragma once
-#include "input/${CONFIG_CLASS_INPUT}.hpp"
-#include "filter/${CONFIG_CLASS_FILTER}.hpp"
-#include "keygen/${CONFIG_CLASS_KEYGEN}.hpp"
-#include "gen_intermediate/${CONFIG_CLASS_INTERMEDIATE}.hpp"
-#include "gen_powermodel/${CONFIG_CLASS_POWERMODEL}.hpp"
-#include "statisticaltest/${CONFIG_CLASS_STATISTIC}.hpp"
-#include "exec/${CONFIG_CLASS_EXEC}.hpp"
-#include "output/${CONFIG_CLASS_OUTPUT}.hpp"
-
-#include "input_prog/${CONFIG_CLASS_INPUT_PROG}.hpp"
-#include "gen_intermediate_prog/${CONFIG_CLASS_INTERMEDIATE_PROG}.hpp"
-#include "gen_powermodel_prog/${CONFIG_CLASS_POWERMODEL_PROG}.hpp"
-#include "output_prog/${CONFIG_CLASS_OUTPUT_PROG}.hpp"
+#include "dpacalc.h"
+using namespace Eigen;
+using namespace std;
+namespace GeneratePowerModelProg
+{
+	class base
+	{
+		public:
+			virtual void generate ( shared_ptr<IntermediateValueMatrix>& intval, shared_ptr<PowerModelMatrix>& pm ) = 0;
+			base ( TCLAP::CmdLine& cmd ) {};
+			virtual void init() {};
+	};
+}

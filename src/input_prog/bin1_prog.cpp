@@ -14,7 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
-#include "bin1.hpp"
+#include "bin1_prog.hpp"
 #include <algorithm>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <sys/stat.h>
 #include <fcntl.h>
 
-long long unsigned int SamplesInput::bin1::read ( long long unsigned int* id, shared_ptr< TracesMatrix >* traces )
+long long unsigned int SamplesInputProg::bin1_prog::read ( long long unsigned int* id, shared_ptr< TracesMatrix >* traces )
 {
 	queueelement qe;
 	while ( qe.size == -1 ) {
@@ -40,12 +40,12 @@ long long unsigned int SamplesInput::bin1::read ( long long unsigned int* id, sh
 	( *traces ) = qe.traces;
 	return qe.size;
 }
-void SamplesInput::bin1::init()
+void SamplesInputProg::bin1_prog::init()
 {
 	struct fileheaders header;
 	long long TotalFileSize;
     offsetUnmap = true;
-	SamplesInput::base::init();
+	SamplesInputProg::base::init();
 	inputfd = open ( nameArg.getValue().c_str(), O_RDONLY );
 	if ( inputfd == -1 ) {
 		cerr << "Cannot open " << nameArg.getValue() << endl;
@@ -57,6 +57,7 @@ void SamplesInput::bin1::init()
 	}
 	SamplesPerTrace = header.numsamples_per_trace;
 	NumTraces = header.numtraces;
+    RealNumTraces = header.numtraces;
 	switch ( header.datatype ) {
 		case 'b':
 			samplesize = 1;
@@ -101,7 +102,7 @@ void SamplesInput::bin1::init()
 	}
 }
 
-void SamplesInput::bin1::populateQueue()
+void SamplesInputProg::bin1_prog::populateQueue()
 {
 	unsigned long long cur_trace;
 	unsigned long long mysample;
@@ -145,7 +146,7 @@ void SamplesInput::bin1::populateQueue()
 	return ;
 }
 
-void SamplesInput::bin1::changeFileOffset(void *newOffset, long long newSize){
+void SamplesInputProg::bin1_prog::changeFileOffset(void *newOffset, long long newSize){
     if ( mlockArg.getValue() ) {
         cout << "munlock-ing old values" << endl;
         munlock ( fileoffset, RealFileSize );
@@ -171,7 +172,7 @@ void SamplesInput::bin1::changeFileOffset(void *newOffset, long long newSize){
 #endif
 }
 
-template <class T>void SamplesInput::bin1::readSamples ( shared_ptr<TracesMatrix>& traces, unsigned long curtrace, unsigned long startingsample, unsigned long numsamples )
+template <class T>void SamplesInputProg::bin1_prog::readSamples ( shared_ptr<TracesMatrix>& traces, unsigned long curtrace, unsigned long startingsample, unsigned long numsamples )
 {
 	T* buffer;
 	//File is big enough, checked right after open.
@@ -181,7 +182,7 @@ template <class T>void SamplesInput::bin1::readSamples ( shared_ptr<TracesMatrix
 	}
 }
 
-void SamplesInput::bin1::readTraceWithData(shared_ptr<TraceWithData>& tracewd, unsigned long id){
+void SamplesInputProg::bin1_prog::readTraceWithData(shared_ptr<TraceWithData>& tracewd, unsigned long id){
     switch ( sampletype ) {
         case 'b':
             readTraceWithDataImplem<uint8_t> (tracewd, id );
@@ -198,7 +199,7 @@ void SamplesInput::bin1::readTraceWithData(shared_ptr<TraceWithData>& tracewd, u
     }
 }
 
-template <class T> void SamplesInput::bin1::readTraceWithDataImplem(shared_ptr<TraceWithData>& tracewd, unsigned long id){
+template <class T> void SamplesInputProg::bin1_prog::readTraceWithDataImplem(shared_ptr<TraceWithData>& tracewd, unsigned long id){
     char* traceData;
     T* buffer;
     (tracewd -> trace).reset(new Trace(SamplesPerTrace));
@@ -212,7 +213,7 @@ template <class T> void SamplesInput::bin1::readTraceWithDataImplem(shared_ptr<T
     }
 }
 
-std::shared_ptr< DataMatrix > SamplesInput::bin1::readData()
+std::shared_ptr< DataMatrix > SamplesInputProg::bin1_prog::readData()
 {
 	char* buffer;
 	if ( data.get() != NULL ) {
@@ -227,7 +228,7 @@ std::shared_ptr< DataMatrix > SamplesInput::bin1::readData()
 	input_mutex.unlock();
 	return shared_ptr<DataMatrix> ( data );
 }
-SamplesInput::bin1::~bin1()
+SamplesInputProg::bin1_prog::~bin1_prog()
 {
 	if ( mlockArg.getValue() ) {
 		munlock ( fileoffset, RealFileSize );
@@ -238,4 +239,19 @@ SamplesInput::bin1::~bin1()
         free(fileoffset);
     }
 	close ( inputfd );
+}
+
+void SamplesInputProg::bin1_prog::changeNumTraces(unsigned long long newNum){
+    if (newNum < RealNumTraces){
+        NumTraces = newNum;
+    } else {
+        NumTraces = RealNumTraces;
+    }
+}
+
+void SamplesInputProg::bin1_prog::reinit(){
+    CurrentSample = 0;
+    CurrentTrace = 0;
+    CurrentId = -1;
+    data.reset();
 }

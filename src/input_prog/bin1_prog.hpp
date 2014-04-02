@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "base.hpp"
 using namespace Eigen;
 using namespace std;
-namespace SamplesInput
+namespace SamplesInputProg
 {
 /*
 #pragma pack(push)
@@ -46,11 +46,11 @@ namespace SamplesInput
 			size = -1;
 		}
 	};
-	class bin1 : public base
+	class bin1_prog : public base
 	{
 		public:
 			virtual unsigned long long read ( unsigned long long* id, shared_ptr<TracesMatrix>* traces );
-			bin1 ( TCLAP::CmdLine& cmd ) :
+			bin1_prog ( TCLAP::CmdLine& cmd ) :
 				base ( cmd ),
 				nameArg ( "f", "filename", "Input file name", true, "", "path" ),
 				mlockArg ( "m", "mlock", "mlock entire input file in ram? Use only if you know what you're doing.", false ),
@@ -59,7 +59,7 @@ namespace SamplesInput
 				cmd.add ( mlockArg );
 			};
 			virtual void init();
-			~bin1();
+			~bin1_prog();
 			shared_ptr<DataMatrix> readData();
             /**
              * @brief readTraceWithData Reads a trace with the associated data
@@ -73,6 +73,12 @@ namespace SamplesInput
              * @param newSize The new size of the buffer (or mmaped file)
              */
             void changeFileOffset(void* newOffset, long long newSize);
+            /**
+             * @brief changeNumTraces Changes the number of traces to be processed
+             * @param newOffset The new number of traces
+             */
+            void changeNumTraces(unsigned long long newNum);
+            void reinit();
 		protected:
 			TCLAP::ValueArg<std::string> nameArg;
 			TCLAP::SwitchArg mlockArg;

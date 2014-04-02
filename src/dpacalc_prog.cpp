@@ -54,11 +54,11 @@ int DPA::main ( int argc, char** argv )
     };
 	TCLAP::CmdLine cmd ( "DPA calc", ' ', VERSION );
 	exec = shared_ptr<ExecMethod::base> ( new ExecMethod::EXECCLASS ( cmd ) );
-	input = shared_ptr<SamplesInput::base> ( new SamplesInput::INPUTCLASS ( cmd ) );
+	input = shared_ptr<SamplesInputProg::base> ( new SamplesInputProg::INPUTPROGCLASS ( cmd ) );
     // filter = shared_ptr<Filters::base> ( new Filters::FILTERCLASS ( cmd, input ) );
 	keygen = shared_ptr<KeyGenerators::base> ( new KeyGenerators::KEYGENCLASS ( cmd ) );
-	interm = shared_ptr<GenerateIntermediateValues::base> ( new GenerateIntermediateValues::GENINTERMCLASS ( cmd, keygen ) );
-	genpm = shared_ptr<GeneratePowerModel::base> ( new GeneratePowerModel::GENPOWERMODELCLASS ( cmd ) );
+	interm = shared_ptr<GenerateIntermediateValuesProg::base> ( new GenerateIntermediateValuesProg::GENINTERMPROGCLASS ( cmd, keygen ) );
+	genpm = shared_ptr<GeneratePowerModelProg::base> ( new GeneratePowerModelProg::GENPOWERMODELPROGCLASS ( cmd ) );
 	stat = shared_ptr<Statistic::base> ( new Statistic::STATISTICCLASS ( cmd ) );
     outp = shared_ptr<OutputProg::base> ( new OutputProg::OUTPUTPROGCLASS ( cmd, keygen ) );
     TCLAP::SwitchArg filterSwitch("i", "filter-input", "If set, the input is filtered. You must provide a configuration file with -c");

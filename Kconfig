@@ -75,40 +75,62 @@ config OPTIMIZATION_OPTIONS
 endmenu
 menu "Class choices"  
   
- 
-config CLASS_INPUT
-	  string "Name of the class that parses the input file"
-	  default "bin1"
+  menu "Common classes"
 
-config CLASS_FILTER
-	  string "Name of the class that filters the input file"
-	  default "fftfilter"
+    config CLASS_FILTER
+	      string "Name of the class that filters the input file"
+	      default "fftfilter"
   
-config CLASS_KEYGEN
-	  string "Name of the class that associates key index to real key value"
-	  default "aes128keygen"
+    config CLASS_KEYGEN
+	      string "Name of the class that associates key index to real key value"
+	      default "aes128keygen"
   
-config CLASS_INTERMEDIATE
-	  string "Name of the class that computes the intermediate value"
-	  default "aes128round1"
+    config CLASS_STATISTIC
+	      string "Name of the class that computes statistic tests"
+	      default "pearson"
+
+    config CLASS_EXEC
+	      string "Name of the class that manages threads"
+	      default "cxx11threads"
+  endmenu
+
+  menu "dpacalc Classes"
+    config CLASS_INPUT
+	      string "Name of the class that parses the input file"
+	      default "bin1"
+
+    config CLASS_INTERMEDIATE
+	      string "Name of the class that computes the intermediate value"
+	      default "aes128round1"
   
-config CLASS_POWERMODEL
-	  string "Name of the class that computes the power model"
-	  default "hammingweight"
+    config CLASS_POWERMODEL
+	      string "Name of the class that computes the power model"
+	      default "hammingweight"
 
-config CLASS_STATISTIC
-	  string "Name of the class that computes statistic tests"
-	  default "pearson"
+    config CLASS_OUTPUT
+	      string "Name of the class that writes output data"
+	      default "multiple"
 
-config CLASS_EXEC
-	  string "Name of the class that manages threads"
-	  default "cxx11threads"
+  endmenu
 
-config CLASS_OUTPUT
-	  string "Name of the class that writes output data"
-	  default "multiple"
+  menu "dpacalc_prog Classes"
 
-config CLASS_OUTPUT_PROG
-	  string "Name of the class that writes output data in dpacalc_prog"
-	  default "gnuplot_prog"
+   config CLASS_INPUT_PROG
+	      string "Name of the class that parses the input file"
+	      default "bin1_prog"
+
+    config CLASS_INTERMEDIATE_PROG
+	      string "Name of the class that computes the intermediate value"
+	      default "aes128round1_prog"
+  
+    config CLASS_POWERMODEL_PROG
+	      string "Name of the class that computes the power model"
+	      default "hammingweight_prog"
+
+    config CLASS_OUTPUT_PROG
+	      string "Name of the class that writes output data"
+	      default "gnuplot_prog"
+    
+    endmenu
+
 endmenu
