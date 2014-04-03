@@ -40,7 +40,7 @@ namespace SamplesInputProg
 				SamplesPerTrace = 0;
 			};
 			virtual unsigned long long read ( unsigned long long* id, shared_ptr<TracesMatrix>* traces ) = 0;
-			virtual shared_ptr<DataMatrix> readData() = 0;
+			virtual shared_ptr<DataMatrix> readProgressiveData(unsigned int step) = 0;
 			virtual void populateQueue() {};
 			virtual void readTraceWithData(shared_ptr<TraceWithData>& tracewd, unsigned long id) = 0;
 			virtual void changeFileOffset(void* newOffset, long long newSize) = 0;

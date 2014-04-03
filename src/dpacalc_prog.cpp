@@ -62,7 +62,7 @@ int DPA::main ( int argc, char** argv )
 	stat = shared_ptr<Statistic::base> ( new Statistic::STATISTICCLASS ( cmd ) );
     outp = shared_ptr<OutputProg::base> ( new OutputProg::OUTPUTPROGCLASS ( cmd, keygen ) );
     TCLAP::SwitchArg filterSwitch("i", "filter-input", "If set, the input is filtered. You must provide a configuration file with -c");
-    TCLAP::ValueArg<int> traceJump("t", "add-traces", "How many traces are added at every progressive round", true, 0, "1-KEYNUM");
+    TCLAP::ValueArg<unsigned int> traceJump("t", "add-traces", "How many traces are added at every progressive round", true, 0, "1-KEYNUM");
     // cmd.add(filterSwitch);
     cmd.add(traceJump);
 	this->ShowCompileTimeOptions();
@@ -110,11 +110,10 @@ int DPA::main ( int argc, char** argv )
         numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
         cout << "dpacalc_prog: now processing " << input->NumTraces << " traces..." << endl;
         cout << "Reading known data..." << endl;
-        data = input->readData();
+        data = input->readProgressiveData(traceJump.getValue());
         cout << "Done. Calculating intermediate values.....[single threaded]" << endl;
         intval.reset (  new IntermediateValueMatrix ( input->NumTraces, KEYNUM ) );
         interm->generate ( data, intval );
-        data.reset(); // tracewd->I don't need that data anymore.
         cout << "Done. Calculating power model.....[single threaded]" << endl;
         pm.reset ( new PowerModelMatrix ( input->NumTraces, KEYNUM ) );
         genpm->generate ( intval, pm );

@@ -60,7 +60,7 @@ namespace SamplesInputProg
 			};
 			virtual void init();
 			~bin1_prog();
-			shared_ptr<DataMatrix> readData();
+            shared_ptr<DataMatrix> readProgressiveData(unsigned int step);
             /**
              * @brief readTraceWithData Reads a trace with the associated data
              * @param tracewd shared_ptr the the trace which is filled by the function

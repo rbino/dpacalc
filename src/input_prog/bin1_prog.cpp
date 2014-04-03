@@ -213,10 +213,16 @@ template <class T> void SamplesInputProg::bin1_prog::readTraceWithDataImplem(sha
     }
 }
 
-std::shared_ptr< DataMatrix > SamplesInputProg::bin1_prog::readData()
+std::shared_ptr< DataMatrix > SamplesInputProg::bin1_prog::readProgressiveData(unsigned int step)
 {
 	char* buffer;
 	if ( data.get() != NULL ) {
+        input_mutex.lock();
+        for ( unsigned long cur_trace = NumTraces - step; cur_trace < NumTraces; cur_trace++ ) {
+            buffer = ( char* ) fileoffset +  getDataOffset ( cur_trace );
+            BufferToBitset<DATA_SIZE_BYTE> ( buffer, ( *data ) [cur_trace] );
+        }
+        input_mutex.unlock();
 		return shared_ptr<DataMatrix> ( data );
 	}
 	input_mutex.lock();
