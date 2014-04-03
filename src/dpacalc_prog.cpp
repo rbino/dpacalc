@@ -73,7 +73,7 @@ int DPA::main ( int argc, char** argv )
 		return 1;
     }
     input->init();
-    timeval start, end; // endfilter
+    timeval start, startbatch, end, endbatch; // endfilter
 	gettimeofday ( &start, NULL );
     /*
     if (filterSwitch.isSet()){
@@ -102,27 +102,34 @@ int DPA::main ( int argc, char** argv )
     */
     input->NumTraces = 0;
     while(input->NumTraces < input->RealNumTraces){
+        gettimeofday ( &startbatch, NULL );
         input->reinit();
         // changeNumTraces clamps the number of traces to RealNumTraces
         input->changeNumTraces(input->NumTraces+traceJump.getValue());
         outp->currentTraces = input->NumTraces;
         numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
-        cout << "dpacalc_prog: now processing " << input->NumTraces << " traces...";
-        cout.flush();
+        cout << "dpacalc_prog: now processing " << input->NumTraces << " traces..." << endl;
+        cout << "Reading known data..." << endl;
         data = input->readData();
+        cout << "Done. Calculating intermediate values.....[single threaded]" << endl;
         intval.reset (  new IntermediateValueMatrix ( input->NumTraces, KEYNUM ) );
         interm->generate ( data, intval );
         data.reset(); // tracewd->I don't need that data anymore.
+        cout << "Done. Calculating power model.....[single threaded]" << endl;
         pm.reset ( new PowerModelMatrix ( input->NumTraces, KEYNUM ) );
         genpm->generate ( intval, pm );
         intval.reset(); // I don't need that data anymore, let's free some memory!
+        cout << "Done. Initializing statistic test [single threaded]:" << endl;
         // StatisticIndexMatrix size should be a multiple of BATCH_SIZE
         unsigned long sz = input->SamplesPerTrace;
         if ( sz % BATCH_SIZE > 0 ) { sz += ( BATCH_SIZE - ( sz % BATCH_SIZE ) ) ; }
         stat->init ( pm );
+        cout << "Done. Starting statistic test pass 1 [multithreaded]" << endl;
         exec->RunAndWait ( numbatches,  runFunc, prefetchFunc);
         outp->endTraceBlock();
         cout << " Done!" << endl;
+        gettimeofday ( &endbatch, NULL );
+        cout << "Batch laboration of " << input->NumTraces << " traces took " << timevaldiff ( &startbatch, &endbatch ) << " milliseconds." << endl;
     }
 	gettimeofday ( &end, NULL );
 	outp->end();
