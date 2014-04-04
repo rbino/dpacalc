@@ -23,8 +23,10 @@ namespace GeneratePowerModelProg
 	class hammingweight_prog : public base
 	{
 		public:
-			virtual void generate ( shared_ptr<IntermediateValueMatrix>& intval, shared_ptr<PowerModelMatrix>& pm );
+            virtual void progressiveGenerate ( shared_ptr<IntermediateValueMatrix>& intval, shared_ptr<PowerModelMatrix>& pm, unsigned int step );
 			hammingweight_prog ( TCLAP::CmdLine& cmd ) : base ( cmd ) {}
+        protected:
+            virtual void fill ( shared_ptr<IntermediateValueMatrix>& intval, shared_ptr<PowerModelMatrix>& pm, unsigned long startTrace, unsigned int step );
 	};
 }
 

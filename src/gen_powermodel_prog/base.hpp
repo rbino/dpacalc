@@ -23,7 +23,7 @@ namespace GeneratePowerModelProg
 	class base
 	{
 		public:
-			virtual void generate ( shared_ptr<IntermediateValueMatrix>& intval, shared_ptr<PowerModelMatrix>& pm ) = 0;
+			virtual void progressiveGenerate ( shared_ptr<IntermediateValueMatrix>& intval, shared_ptr<PowerModelMatrix>& pm, unsigned int step ) = 0;
 			base ( TCLAP::CmdLine& cmd ) {};
 			virtual void init() {};
 	};

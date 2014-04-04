@@ -115,8 +115,7 @@ int DPA::main ( int argc, char** argv )
         cout << "Done. Calculating intermediate values.....[single threaded]" << endl;
         interm->progressiveGenerate ( data, intval, step );
         cout << "Done. Calculating power model.....[single threaded]" << endl;
-        pm.reset ( new PowerModelMatrix ( input->NumTraces, KEYNUM ) );
-        genpm->generate ( intval, pm );
+        genpm->progressiveGenerate ( intval, pm, step );
         cout << "Done. Initializing statistic test [single threaded]:" << endl;
         // StatisticIndexMatrix size should be a multiple of BATCH_SIZE
         unsigned long sz = input->SamplesPerTrace;
