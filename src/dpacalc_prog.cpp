@@ -109,7 +109,7 @@ int DPA::main ( int argc, char** argv )
         input->changeNumTraces(input->NumTraces + step);
         outp->currentTraces = input->NumTraces;
         numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
-        cout << "dpacalc_prog: now processing " << input->NumTraces << " traces..." << endl;
+        cout << "dpacalc_prog: now processing " << input->NumTraces << "/" << input->RealNumTraces << " traces..." << endl;
         cout << "Reading known data..." << endl;
         data = input->readProgressiveData(step);
         cout << "Done. Calculating intermediate values.....[single threaded]" << endl;
