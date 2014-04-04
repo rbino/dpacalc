@@ -106,7 +106,7 @@ int DPA::main ( int argc, char** argv )
         gettimeofday ( &startbatch, NULL );
         input->reinit();
         // changeNumTraces clamps the number of traces to RealNumTraces
-        input->changeNumTraces(input->NumTraces + step);
+        input->increaseNumTraces(step);
         outp->currentTraces = input->NumTraces;
         numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
         cout << "dpacalc_prog: now processing " << input->NumTraces << "/" << input->RealNumTraces << " traces..." << endl;

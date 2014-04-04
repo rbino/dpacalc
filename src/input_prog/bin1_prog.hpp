@@ -77,7 +77,7 @@ namespace SamplesInputProg
              * @brief changeNumTraces Changes the number of traces to be processed
              * @param newOffset The new number of traces
              */
-            void changeNumTraces(unsigned long long newNum);
+            void increaseNumTraces(unsigned int& step);
             void reinit();
 		protected:
 			TCLAP::ValueArg<std::string> nameArg;

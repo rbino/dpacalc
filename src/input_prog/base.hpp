@@ -44,7 +44,7 @@ namespace SamplesInputProg
 			virtual void populateQueue() {};
 			virtual void readTraceWithData(shared_ptr<TraceWithData>& tracewd, unsigned long id) = 0;
 			virtual void changeFileOffset(void* newOffset, long long newSize) = 0;
-			virtual void changeNumTraces(unsigned long long newNum) = 0;
+			virtual void increaseNumTraces(unsigned int& step) = 0;
 			virtual void reinit() = 0;  // Reinitializes CurrentSample, CurrentId, CurrentTrace and data. NumTraces and SamplesPerTrace are not touched.
 		protected:
 			shared_ptr<DataMatrix> data;

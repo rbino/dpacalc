@@ -247,12 +247,11 @@ SamplesInputProg::bin1_prog::~bin1_prog()
 	close ( inputfd );
 }
 
-void SamplesInputProg::bin1_prog::changeNumTraces(unsigned long long newNum){
-    if (newNum < RealNumTraces){
-        NumTraces = newNum;
-    } else {
-        NumTraces = RealNumTraces;
+void SamplesInputProg::bin1_prog::increaseNumTraces(unsigned int& step){
+    if (NumTraces + step >= RealNumTraces){
+        step = RealNumTraces - NumTraces;
     }
+    NumTraces += step;
 }
 
 void SamplesInputProg::bin1_prog::reinit(){
