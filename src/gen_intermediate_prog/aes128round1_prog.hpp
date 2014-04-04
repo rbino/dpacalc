@@ -25,7 +25,6 @@ namespace GenerateIntermediateValuesProg
 		public:
 
             virtual void progressiveGenerate ( shared_ptr<DataMatrix>& knowndata, shared_ptr<IntermediateValueMatrix>& intval, unsigned int step );
-            virtual void fill ( shared_ptr<DataMatrix>& knowndata, shared_ptr<IntermediateValueMatrix>& intval, unsigned long startTrace, unsigned int step );
 			virtual void init();
 			aes128round1_prog ( TCLAP::CmdLine& cmd, shared_ptr<KeyGenerators::base> _keygen ) : base ( cmd, _keygen ),
 				whichsboxArg ( "b", "sbox", "From which SBOX output should I start to correlate?", false, 0, "0-15" ),
@@ -34,6 +33,7 @@ namespace GenerateIntermediateValuesProg
 				cmd.add ( sboxnumArg );
 			}
 		protected:
+            virtual void fill ( shared_ptr<DataMatrix>& knowndata, shared_ptr<IntermediateValueMatrix>& intval, unsigned long startTrace, unsigned int step );
 			TCLAP::ValueArg<int> whichsboxArg;
 			TCLAP::ValueArg<int> sboxnumArg;
 	};
