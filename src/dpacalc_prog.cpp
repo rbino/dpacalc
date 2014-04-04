@@ -126,11 +126,11 @@ int DPA::main ( int argc, char** argv )
         outp->endTraceBlock();
         cout << " Done!" << endl;
         gettimeofday ( &endbatch, NULL );
-        cout << "Batch laboration of " << input->NumTraces << " traces took " << timevaldiff ( &startbatch, &endbatch ) << " milliseconds." << endl;
+        cout << "Batch elaboration of " << input->NumTraces << " traces took " << timevaldiff ( &startbatch, &endbatch ) << " milliseconds." << endl;
     }
 	gettimeofday ( &end, NULL );
 	outp->end();
-	cout << "Elaboration took " << timevaldiff ( &start, &end ) << " milliseconds." << endl;
+    cout << "Total elaboration took " << timevaldiff ( &start, &end ) << " milliseconds." << endl;
 	return 0;
 }
 void DPA::ShowCompileTimeOptions()
