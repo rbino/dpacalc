@@ -25,7 +25,7 @@ void GenerateIntermediateValuesProg::aes128round1_prog::init()
 	}
 }
 
-void GenerateIntermediateValuesProg::aes128round1_prog::generate ( shared_ptr<DataMatrix>& knowndata, shared_ptr<IntermediateValueMatrix>& intval )
+void GenerateIntermediateValuesProg::aes128round1_prog::fill ( shared_ptr<DataMatrix>& knowndata, shared_ptr<IntermediateValueMatrix>& intval, unsigned long startTrace, unsigned int step )
 {
 	std::bitset<KEY_SIZE_BIT> key;
 	uint8_t fullaeskey[AES_STATE_BYTES_NO];
@@ -37,7 +37,7 @@ void GenerateIntermediateValuesProg::aes128round1_prog::generate ( shared_ptr<Da
 		key = keygen->getKeyFromIndex ( keyidx );
 		BitsetToBuffer<KEY_SIZE_BYTE> ( key, ( char* ) &fullaeskey );
 		KeyExpansion ( fullaeskey, UnrolledRoundKey );
-		for ( unsigned long trcidx = 0; trcidx < knowndata->size(); trcidx++ ) {
+        for ( unsigned long trcidx = startTrace; trcidx < startTrace+step; trcidx++ ) {
 			BitsetToBuffer<DATA_SIZE_BYTE> ( ( *knowndata ) [trcidx], ( char* ) &fullaesdata );
 			AddRoundKey ( fullaesdata, UnrolledRoundKey[0] );
 			( *intval ) ( trcidx, keyidx ) = 0;
@@ -63,3 +63,14 @@ void GenerateIntermediateValuesProg::aes128round1_prog::generate ( shared_ptr<Da
 	}
 }
 
+void GenerateIntermediateValuesProg::aes128round1_prog::progressiveGenerate ( shared_ptr<DataMatrix>& knowndata, shared_ptr<IntermediateValueMatrix>& intval, unsigned int step )
+{
+    if (intval.get() == NULL){
+        intval.reset( new IntermediateValueMatrix ( step, KEYNUM ));
+        fill(knowndata,intval,0,step);
+        return;
+    }
+    unsigned long curTraces = intval->rows();
+    intval->conservativeResize(curTraces+step,NoChange);
+    fill(knowndata, intval, curTraces, step);
+}

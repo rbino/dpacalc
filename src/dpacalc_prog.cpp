@@ -101,23 +101,22 @@ int DPA::main ( int argc, char** argv )
     }
     */
     input->NumTraces = 0;
+    unsigned int step = traceJump.getValue();
     while(input->NumTraces < input->RealNumTraces){
         gettimeofday ( &startbatch, NULL );
         input->reinit();
         // changeNumTraces clamps the number of traces to RealNumTraces
-        input->changeNumTraces(input->NumTraces+traceJump.getValue());
+        input->changeNumTraces(input->NumTraces + step);
         outp->currentTraces = input->NumTraces;
         numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
         cout << "dpacalc_prog: now processing " << input->NumTraces << " traces..." << endl;
         cout << "Reading known data..." << endl;
-        data = input->readProgressiveData(traceJump.getValue());
+        data = input->readProgressiveData(step);
         cout << "Done. Calculating intermediate values.....[single threaded]" << endl;
-        intval.reset (  new IntermediateValueMatrix ( input->NumTraces, KEYNUM ) );
-        interm->generate ( data, intval );
+        interm->progressiveGenerate ( data, intval, step );
         cout << "Done. Calculating power model.....[single threaded]" << endl;
         pm.reset ( new PowerModelMatrix ( input->NumTraces, KEYNUM ) );
         genpm->generate ( intval, pm );
-        intval.reset(); // I don't need that data anymore, let's free some memory!
         cout << "Done. Initializing statistic test [single threaded]:" << endl;
         // StatisticIndexMatrix size should be a multiple of BATCH_SIZE
         unsigned long sz = input->SamplesPerTrace;
