@@ -43,6 +43,7 @@ typedef Eigen::Matrix<std::complex<TraceValueType>, 1, Eigen::Dynamic> ComplexTr
 typedef Eigen::Matrix<IntermediateValueType, Eigen::Dynamic, Eigen::Dynamic> IntermediateValueMatrix;
 typedef Eigen::Matrix<TraceValueType, Eigen::Dynamic, Eigen::Dynamic> PowerModelMatrix;
 typedef Eigen::Matrix<StatisticValueType, Eigen::Dynamic, Eigen::Dynamic> StatisticIndexMatrix;
+typedef std::pair<StatisticValueType,StatisticValueType> ConfidencePair;
 typedef struct {
     std::shared_ptr<DataValueType> data;
     std::shared_ptr<Trace> trace;

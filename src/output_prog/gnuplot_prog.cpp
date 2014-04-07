@@ -31,7 +31,21 @@ void OutputProg::gnuplot_prog::init()
 		cerr << "Please provide a valid script output filename" << endl;
 		exit ( 1 );
 	}
-	scriptoutp << "set term png size 3000,1500 crop;" << endl;
+    confdataoutp.open( confidenceDataNameArg.getValue()  );
+    if ( !confdataoutp.is_open() ) {
+        cerr << "Please provide a valid confidence data output filename" << endl;
+        exit ( 1 );
+    }
+    ofstream confidencescriptoutp ( confidenceScriptNameArg.getValue() );
+    if ( !confidencescriptoutp.is_open() ) {
+        cerr << "Please provide a valid confidence script output filename" << endl;
+        exit ( 1 );
+    }
+    if (alphaArg.getValue() <= 0 || alphaArg.getValue() >= 1){
+        cerr << "Alpha must be 0 < alpha < 1" << endl;
+        exit ( 1 );
+    }
+    scriptoutp << "set term png size 3000,1500 crop;" << endl;
     scriptoutp << "set output \"output_prog.png\";" << endl;
 	scriptoutp << "set autoscale;" << endl;
 	scriptoutp << "set xtic auto;" << endl;
@@ -48,6 +62,45 @@ void OutputProg::gnuplot_prog::init()
 		}
 	}
 	scriptoutp.close();
+
+    confidencescriptoutp << "set term pngcairo dashed size 3000,1500 crop;" << endl;
+    confidencescriptoutp << "set output \"output_prog_conf.png\";" << endl;
+    confidencescriptoutp << "set autoscale;" << endl;
+    confidencescriptoutp << "set xtic auto;" << endl;
+    confidencescriptoutp << "set ytic auto;" << endl;
+    confidencescriptoutp << "set style line 1 lt 2 lw 2 pt 1 linecolor rgb \"green\";" << endl;
+    confidencescriptoutp << "set style line 2 lt 1 lw 2 pt 1 linecolor rgb \"green\";" << endl;
+    confidencescriptoutp << "set style line 3 lt 2 lw 2 pt 1 linecolor rgb \"red\";" << endl;
+    confidencescriptoutp << "set style line 4 lt 1 lw 2 pt 1 linecolor rgb \"red\";" << endl;
+    confidencescriptoutp << "set key outside right;" << endl;
+    confidencescriptoutp << "set title \"dpacalc_prog graphical output with confidence level\";" << endl;
+    confidencescriptoutp << "set xlabel \"Number of traces\";" << endl;
+    confidencescriptoutp << "set ylabel \"Max Pearson coefficient and confidence interval\";" << endl << endl << endl << endl << endl;
+    confidencescriptoutp << "plot ";
+    for ( unsigned long long k = 0; k < 6; k++ ) {
+        confidencescriptoutp  << " \"" << confidenceDataNameArg.getValue() << "\" u 1:" << k + 2 << " t \"" << keygen->getKeyAsString ( k ) << "\" with lines ls ";
+        /* Ugly as hell, but it's to have the line styles right */
+        switch (k) {
+        case 0:
+        case 2:
+            confidencescriptoutp << "1,";
+            break;
+        case 1:
+            confidencescriptoutp << "2,";
+            break;
+        case 3:
+            confidencescriptoutp << "3,";
+            break;
+        case 4:
+            confidencescriptoutp << "4,";
+            break;
+        case 5:
+            confidencescriptoutp << "3";
+            break;
+        }
+    }
+    confidencescriptoutp.close();
+
 }
 
 void OutputProg::gnuplot_prog::WriteBatch ( unsigned long long id, shared_ptr< StatisticIndexMatrix >& s )
@@ -72,12 +125,43 @@ void OutputProg::gnuplot_prog::endTraceBlock()
         dataoutp << "\t" << bestPearson (key);
     }
     dataoutp << endl;
+    // Little trick to find max and second max: we find max, than we set it to 0 (we don't need it anymore anyway)
+    unsigned long long maxRow, maxCol;
+    StatisticValueType best = bestPearson.maxCoeff(&maxRow, &maxCol);
+    bestPearson (maxCol) = 0;
+    ConfidencePair bestConf = getConfidence(best, currentTraces, alphaArg.getValue());
+
+    StatisticValueType secondBest = bestPearson.maxCoeff();
+    ConfidencePair secondBestConf = getConfidence(secondBest, currentTraces, alphaArg.getValue());
+
+    confdataoutp << currentTraces << "\t" << bestConf.first << "\t" << best << "\t" << bestConf.second << "\t" << secondBestConf.first << "\t" << secondBest << "\t" << secondBestConf.second << endl;
     bestPearson = Trace::Zero(KEYNUM);
 }
 
 void OutputProg::gnuplot_prog::end()
 {
 	OutputProg::base::end();
+    confdataoutp.close();
 	dataoutp.close();
+}
+
+ConfidencePair OutputProg::gnuplot_prog::getConfidence(StatisticValueType r, unsigned long n, StatisticValueType alpha)
+{
+    //TODO: if n < 4 I think there will be problems
+
+    // Confidence level
+    StatisticValueType gamma = 1-alpha;
+    // Fisher transform r to map correctly the domains
+    StatisticValueType Fr = atanh(r);
+    StatisticValueType z_score = sqrt(n-3)*Fr;
+    // obtain Gaussian quantile of transformed z_score
+    StatisticValueType half_width=sqrt(2)*boost::math::erf_inv(2*((1+gamma)/2)-1);
+    // compute confidence interval in Fisher domain
+    StatisticValueType inf=z_score-half_width;
+    StatisticValueType sup=z_score+half_width;
+    // invert Fisher map to get the domain straight again
+    inf=tanh(inf/sqrt(n-3));
+    sup=tanh(sup/sqrt(n-3));
+    return ConfidencePair(inf,sup);
 }
 
