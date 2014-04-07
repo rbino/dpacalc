@@ -73,9 +73,9 @@ void OutputProg::gnuplot_prog::init()
     confidencescriptoutp << "set style line 3 lt 2 lw 2 pt 1 linecolor rgb \"red\";" << endl;
     confidencescriptoutp << "set style line 4 lt 1 lw 2 pt 1 linecolor rgb \"red\";" << endl;
     confidencescriptoutp << "set key outside right;" << endl;
-    confidencescriptoutp << "set title \"dpacalc_prog graphical output with confidence level\";" << endl;
+    confidencescriptoutp << "set title \"dpacalc_prog graphical output with confidence interval\";" << endl;
     confidencescriptoutp << "set xlabel \"Number of traces\";" << endl;
-    confidencescriptoutp << "set ylabel \"Max Pearson coefficient and confidence interval\";" << endl << endl << endl << endl << endl;
+    confidencescriptoutp << "set ylabel \"Max Pearson coefficient and confidence interval with alpha=" << alphaArg.getValue() << "\";" << endl << endl << endl << endl << endl;
     confidencescriptoutp << "plot ";
     for ( unsigned long long k = 0; k < 6; k++ ) {
         confidencescriptoutp  << " \"" << confidenceDataNameArg.getValue() << "\" u 1:" << k + 2 << " t \"" << keygen->getKeyAsString ( k ) << "\" with lines ls ";
