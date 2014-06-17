@@ -27,7 +27,7 @@ using namespace std;
 
 int DPA::main ( int argc, char** argv )
 {
-
+/*
     auto filtFunc = [&] {
         shared_ptr<TraceWithData> trace(new TraceWithData);
         traceMutex.lock();
@@ -37,6 +37,7 @@ int DPA::main ( int argc, char** argv )
         filter->applyFilter(trace);
         filter->writeFilteredTrace(trace, localTrace);
     };
+*/
     auto prefetchFunc = [&] {
         while ( input->CurrentSample < input->SamplesPerTrace ) {
             input->populateQueue();
