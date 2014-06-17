@@ -27,7 +27,7 @@ using namespace std;
 
 int DPA::main ( int argc, char** argv )
 {
-    /*
+
     auto filtFunc = [&] {
         shared_ptr<TraceWithData> trace(new TraceWithData);
         traceMutex.lock();
@@ -37,7 +37,6 @@ int DPA::main ( int argc, char** argv )
         filter->applyFilter(trace);
         filter->writeFilteredTrace(trace, localTrace);
     };
-    */
     auto prefetchFunc = [&] {
         while ( input->CurrentSample < input->SamplesPerTrace ) {
             input->populateQueue();
@@ -59,8 +58,8 @@ int DPA::main ( int argc, char** argv )
 	keygen = shared_ptr<KeyGenerators::base> ( new KeyGenerators::KEYGENCLASS ( cmd ) );
 	interm = shared_ptr<GenerateIntermediateValuesProg::base> ( new GenerateIntermediateValuesProg::GENINTERMPROGCLASS ( cmd, keygen ) );
 	genpm = shared_ptr<GeneratePowerModelProg::base> ( new GeneratePowerModelProg::GENPOWERMODELPROGCLASS ( cmd ) );
-	stat = shared_ptr<Statistic::base> ( new Statistic::STATISTICCLASS ( cmd ) );
-    outp = shared_ptr<OutputProg::base> ( new OutputProg::OUTPUTPROGCLASS ( cmd, keygen ) );
+    stat = shared_ptr<StatisticProg::base> ( new StatisticProg::STATISTICPROGCLASS ( cmd ) );
+    outp = shared_ptr<OutputFilter::base> ( new OutputFilter::OUTPUTFILTCLASS ( cmd, keygen ) );
     TCLAP::SwitchArg filterSwitch("i", "filter-input", "If set, the input is filtered. You must provide a configuration file with -c");
     TCLAP::ValueArg<unsigned int> traceJump("t", "add-traces", "How many traces are added at every progressive round", true, 0, "1-KEYNUM");
     // cmd.add(filterSwitch);
@@ -159,7 +158,7 @@ void DPA::ShowCompileTimeOptions()
     cout << "Name of the class that filters the data: " << FILTERCLASS_STR << endl;
 	cout << "Name of the class that generates intermediate values: " << GENINTERMCLASS_STR << endl;
 	cout << "Name of the class that generates power model: " << GENPOWERMODELCLASS_STR << endl;
-	cout << "Name of the class that calculates statistic data: " << STATISTICCLASS_STR << endl;
+    cout << "Name of the class that calculates statistic data: " << STATISTICPROGCLASS_STR << endl;
 	cout << "Name of the class that manages parallelization: " << EXECCLASS_STR << endl;
     cout << "Name of the class that writes progressive output: " << OUTPUTPROGCLASS_STR << endl;
 	cout << endl;

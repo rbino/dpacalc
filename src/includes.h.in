@@ -29,3 +29,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "gen_powermodel_prog/${CONFIG_CLASS_POWERMODEL_PROG}.hpp"
 #include "output_prog/${CONFIG_CLASS_OUTPUT_PROG}.hpp"
 #include "statisticaltest_prog/${CONFIG_CLASS_STATISTIC_PROG}.hpp"
+
+#include "output_filter/${CONFIG_CLASS_OUTPUT_FILT}.hpp"

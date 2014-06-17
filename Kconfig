@@ -134,6 +134,11 @@ menu "Class choices"
     config CLASS_OUTPUT_PROG
 	      string "Name of the class that writes output data"
 	      default "gnuplot_prog"
+
+    config CLASS_OUTPUT_FILT
+	      string "Name of the class that writes output filterfind data"
+	      default "output_fftfilterconf"
+
     
     endmenu
 

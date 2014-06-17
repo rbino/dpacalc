@@ -27,6 +27,8 @@ set(powermodelprogsources gen_powermodel_prog/${CONFIG_CLASS_POWERMODEL_PROG}.cp
 set(statisticsprogources statisticaltest_prog/${CONFIG_CLASS_STATISTIC_PROG}.cpp)
 set(outputprogsources output_prog/${CONFIG_CLASS_OUTPUT_PROG}.cpp)
 
+set(outputsearchsources output_filter/${CONFIG_CLASS_OUTPUT_FILT}.cpp)
+
 include( input/${CONFIG_CLASS_INPUT}.cmake OPTIONAL )
 include( input_prog/${CONFIG_CLASS_INPUT_PROG}.cmake OPTIONAL )
 include( filter/${CONFIG_CLASS_FILTER}.cmake OPTIONAL )
@@ -39,8 +41,7 @@ include( statisticaltest/${CONFIG_CLASS_STATISTIC}.cmake OPTIONAL )
 include( statisticaltest_prog/${CONFIG_CLASS_STATISTIC_PROG}.cmake OPTIONAL )
 include( exec/${CONFIG_CLASS_EXEC}.cmake OPTIONAL )
 include( output/${CONFIG_CLASS_OUTPUT}.cmake OPTIONAL )
-include( outputprog/${CONFIG_CLASS_OUTPUT_PROG}.cmake OPTIONAL )
-
+include( output_prog/${CONFIG_CLASS_OUTPUT_PROG}.cmake OPTIONAL )
 
 
 include_directories(${EIGEN_INCLUDE_DIRS} ${TCLAP_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${CMAKE_SOURCE_DIR} ${DPACALC_EXTRA_INCLUDES})

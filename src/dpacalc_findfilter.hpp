@@ -22,9 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "keygen/base.hpp"
 #include "gen_intermediate_prog/base.hpp"
 #include "gen_powermodel_prog/base.hpp"
-#include "statisticaltest/base.hpp"
+#include "statisticaltest_prog/base.hpp"
 #include "exec/base.hpp"
-#include "output_prog/base.hpp"
+#include "output_filter/base.hpp"
 
 using namespace Eigen;
 using namespace std;
@@ -49,8 +49,8 @@ class DPA
 		shared_ptr<KeyGenerators::base> keygen;
 		shared_ptr<GenerateIntermediateValuesProg::base> interm;
 		shared_ptr<GeneratePowerModelProg::base> genpm;
-		shared_ptr<Statistic::base> stat;
-        shared_ptr<OutputProg::base> outp;
+        shared_ptr<StatisticProg::base> stat;
+        shared_ptr<OutputFilter::base> outp;
 		virtual void ShowCompileTimeOptions();
         unsigned long curTrace;
         mutex traceMutex;
