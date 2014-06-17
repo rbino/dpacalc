@@ -155,11 +155,11 @@ void DPA::ShowCompileTimeOptions()
 
 
 	cout << endl;
-	cout << "Name of the class that reads input file: " << INPUTCLASS_STR << endl;
+    cout << "Name of the class that reads input file: " << INPUTPROGCLASS_STR << endl;
     cout << "Name of the class that filters the data: " << FILTERCLASS_STR << endl;
-	cout << "Name of the class that generates intermediate values: " << GENINTERMCLASS_STR << endl;
-	cout << "Name of the class that generates power model: " << GENPOWERMODELCLASS_STR << endl;
-	cout << "Name of the class that calculates statistic data: " << STATISTICCLASS_STR << endl;
+    cout << "Name of the class that generates intermediate values: " << GENINTERMPROGCLASS_STR << endl;
+    cout << "Name of the class that generates power model: " << GENPOWERMODELPROGCLASS_STR << endl;
+    cout << "Name of the class that calculates statistic data: " << STATISTICCLASS_STR << endl;
 	cout << "Name of the class that manages parallelization: " << EXECCLASS_STR << endl;
     cout << "Name of the class that writes progressive output: " << OUTPUTPROGCLASS_STR << endl;
 	cout << endl;
