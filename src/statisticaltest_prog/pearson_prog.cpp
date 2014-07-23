@@ -29,16 +29,16 @@ void StatisticProg::pearson_prog::init ( shared_ptr< PowerModelMatrix >& _pm, un
         sum_hyp.reset(new Matrix<TraceValueType, 1, Dynamic> (1,KEYNUM));
         sum_hypSquared.reset(new Matrix<TraceValueType, 1, Dynamic> (1,KEYNUM));
         for ( long d = 0; d < KEYNUM; d++ ){
-            (*sum_hyp) ( 0, d ) = pm->col (d).array().sum();
-            (*sum_hypSquared) ( 0, d ) = pm->col (d).squaredNorm();
+            (*sum_hyp) ( 0, d ) = pm->col (d).topRows(step).array().sum();
+            (*sum_hypSquared) ( 0, d ) = pm->col (d).topRows(step).squaredNorm();
         }
         sum_traces.resize(nbatch);
         sum_tracesSquared.resize(nbatch);
         sum_tracehyp.resize(nbatch);
     } else {
         for ( long d = 0; d < KEYNUM; d++ ){
-            (*sum_hyp) ( 0, d ) += pm->col (d).array().sum();
-            (*sum_hypSquared) ( 0, d ) += pm->col (d).squaredNorm();
+            (*sum_hyp) ( 0, d ) += pm->col (d).topRows(step).array().sum();
+            (*sum_hypSquared) ( 0, d ) += pm->col (d).topRows(step).squaredNorm();
         }
     }
 }
