@@ -23,9 +23,9 @@ namespace StatisticProg
 	class base
 	{
 		public:
-			virtual void generate ( shared_ptr<StatisticIndexMatrix>& stat, shared_ptr<TracesMatrix>& traces, unsigned long numvalid ) = 0;
+			virtual void progressiveGenerate ( shared_ptr<StatisticIndexMatrix>& stat, shared_ptr<TracesMatrix>& traces, unsigned long numvalid, unsigned long long id ) = 0;
 			base ( TCLAP::CmdLine& cmd ) {};
-			virtual void init ( shared_ptr<PowerModelMatrix>& _pm ) {
+			virtual void init ( shared_ptr<PowerModelMatrix>& _pm, unsigned int step, unsigned long nbatch ) {
 				pm = shared_ptr<PowerModelMatrix> ( _pm );
 			}
 		protected:

@@ -67,10 +67,12 @@ void GenerateIntermediateValuesProg::aes128round1_prog::progressiveGenerate ( sh
 {
     if (intval.get() == NULL){
         intval.reset( new IntermediateValueMatrix ( step, KEYNUM ));
-        fill(knowndata,intval,0,step);
-        return;
     }
+    fill(knowndata,intval,0,step);
+    return;
+    /*
     unsigned long curTraces = intval->rows();
     intval->conservativeResize(curTraces+step,NoChange);
     fill(knowndata, intval, curTraces, step);
+    */
 }

@@ -33,10 +33,12 @@ void GeneratePowerModelProg::hammingweight_prog::progressiveGenerate ( shared_pt
 {
     if (pm.get() == NULL){
         pm.reset(new PowerModelMatrix ( step, KEYNUM ));
-        fill(intval, pm, 0, step);
-        return;
     }
+    fill(intval, pm, 0, step);
+    return;
+    /*
     unsigned long curTraces = pm->rows();
     pm->conservativeResize(curTraces+step,NoChange);
     fill(intval, pm, curTraces, step);
+    */
 }

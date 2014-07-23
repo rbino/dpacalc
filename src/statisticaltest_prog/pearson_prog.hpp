@@ -17,20 +17,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #pragma once
 #include "dpacalc.h"
 #include "base.hpp"
-#include <map>
 using namespace Eigen;
 using namespace std;
 namespace StatisticProg
 {
+
 	class pearson_prog: public base
 	{
 		public:
-			virtual void generate ( shared_ptr<StatisticIndexMatrix>& stat, shared_ptr<TracesMatrix>& traces, unsigned long numvalid );
-			pearson_prog ( TCLAP::CmdLine& cmd ) : base ( cmd ) {};
-			virtual void init ( shared_ptr<PowerModelMatrix>& _pm );
+            virtual void progressiveGenerate (shared_ptr<StatisticIndexMatrix>& stat, shared_ptr<TracesMatrix>& traces, unsigned long numvalid , unsigned long long id);
+            pearson_prog ( TCLAP::CmdLine& cmd ) : base ( cmd ) {};
+            virtual void init (shared_ptr<PowerModelMatrix>& _pm , unsigned int step, unsigned long nbatch);
 		protected:
-			Eigen::Matrix<TraceValueType, Dynamic, Dynamic> pmexpect;
-			Eigen::Matrix<TraceValueType, 1, Dynamic> pmexpect_bykey;
+            bool first = true;
+            shared_ptr<Eigen::Matrix<TraceValueType, 1, Dynamic> > sum_hyp;
+            shared_ptr<Eigen::Matrix<TraceValueType, 1, Dynamic> > sum_hypSquared;
+            std::vector<shared_ptr<StatisticIndexMatrix> > sum_tracehyp;
+            std::vector<shared_ptr<StatisticIndexMatrix> > sum_traces;
+            std::vector<shared_ptr<StatisticIndexMatrix> > sum_tracesSquared;
+            unsigned int curStep;
+            unsigned int curNtraces=0;
+
 	};
 }
 

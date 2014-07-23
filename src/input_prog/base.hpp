@@ -29,12 +29,12 @@ namespace SamplesInputProg
 			unsigned long long SamplesPerTrace; //from metadata, dimension N of matrix T
 			unsigned long long NumTraces; //virtual dimension N of matrix T (changes during dpacalc_prog)
 			unsigned long long RealNumTraces;	//dimension N of matrix T
-			unsigned long long CurrentSample;  //dimension N of matrix T
-			unsigned long long CurrentTrace;
+			unsigned long long CurrentSample;  //dimension N of matrix 
+			unsigned long long CurrentStep;
 			base ( TCLAP::CmdLine& cmd ) {};
 			virtual void init() {
 				CurrentSample = 0;
-				CurrentTrace = 0;
+        CurrentStep = 0;
 				CurrentId = -1;
 				NumTraces = 0;
 				SamplesPerTrace = 0;

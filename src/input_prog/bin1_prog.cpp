@@ -121,9 +121,9 @@ void SamplesInputProg::bin1_prog::populateQueue()
 	++CurrentId;
 	qe.size = num;
 	qe.id = CurrentId;
-	qe.traces = shared_ptr<TracesMatrix> ( new TracesMatrix ( NumTraces, BATCH_SIZE ) );
+    qe.traces = shared_ptr<TracesMatrix> ( new TracesMatrix ( CurrentStep, BATCH_SIZE ) );
 	//  cout << "I'm going to allocate a " << NumTraces << " * " << BATCH_SIZE << " * " << sizeof(TraceValueType) << " = " << (NumTraces*BATCH_SIZE*sizeof(TraceValueType)/1024) << " kb matrix"<<endl;
-	for ( cur_trace = 0; cur_trace < NumTraces; cur_trace++ ) {
+    for ( cur_trace = NumTraces - CurrentStep; cur_trace < NumTraces; cur_trace++ ) {
 		switch ( sampletype ) {
 			case 'b':
 				readSamples<uint8_t> ( qe.traces, cur_trace, mysample, num );
@@ -178,7 +178,7 @@ template <class T>void SamplesInputProg::bin1_prog::readSamples ( shared_ptr<Tra
 	//File is big enough, checked right after open.
 	buffer = ( T* ) ( ( char* ) fileoffset + getSampleOffset ( curtrace, startingsample ) );
 	for ( unsigned long i = 0; i < numsamples; i++ ) {
-		( *traces ) ( curtrace, i ) = buffer[i];
+        ( *traces ) ( curtrace - NumTraces + CurrentStep, i ) = buffer[i];
 	}
 }
 
@@ -220,14 +220,14 @@ std::shared_ptr< DataMatrix > SamplesInputProg::bin1_prog::readProgressiveData(u
         input_mutex.lock();
         for ( unsigned long cur_trace = NumTraces - step; cur_trace < NumTraces; cur_trace++ ) {
             buffer = ( char* ) fileoffset +  getDataOffset ( cur_trace );
-            BufferToBitset<DATA_SIZE_BYTE> ( buffer, ( *data ) [cur_trace] );
+            BufferToBitset<DATA_SIZE_BYTE> ( buffer, ( *data ) [cur_trace - NumTraces + step] );
         }
         input_mutex.unlock();
 		return shared_ptr<DataMatrix> ( data );
 	}
 	input_mutex.lock();
-	data.reset ( new DataMatrix ( NumTraces ) );
-	for ( unsigned long cur_trace = 0; cur_trace < NumTraces; cur_trace++ ) {
+    data.reset ( new DataMatrix ( step ) );
+    for ( unsigned long cur_trace = 0; cur_trace < step; cur_trace++ ) {
 		buffer = ( char* ) fileoffset +  getDataOffset ( cur_trace );
 		BufferToBitset<DATA_SIZE_BYTE> ( buffer, ( *data ) [cur_trace] );
 	}
@@ -251,12 +251,11 @@ void SamplesInputProg::bin1_prog::increaseNumTraces(unsigned int& step){
     if (NumTraces + step >= RealNumTraces){
         step = RealNumTraces - NumTraces;
     }
+    CurrentStep = step;
     NumTraces += step;
 }
 
 void SamplesInputProg::bin1_prog::reinit(){
     CurrentSample = 0;
-    CurrentTrace = 0;
     CurrentId = -1;
-    data.reset();
 }

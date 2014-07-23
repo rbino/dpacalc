@@ -49,7 +49,7 @@ int DPA::main ( int argc, char** argv )
         shared_ptr<StatisticIndexMatrix> sm;
         int num = input->read ( &myid, &traces );
         sm.reset ( new StatisticIndexMatrix ( num, KEYNUM ) );
-        stat->generate ( sm, traces, num );
+        stat->progressiveGenerate ( sm, traces, num, myid );
         outp->WriteBatch ( myid, sm );
     };
 	TCLAP::CmdLine cmd ( "DPA calc", ' ', VERSION );
@@ -120,7 +120,7 @@ int DPA::main ( int argc, char** argv )
         // StatisticIndexMatrix size should be a multiple of BATCH_SIZE
         unsigned long sz = input->SamplesPerTrace;
         if ( sz % BATCH_SIZE > 0 ) { sz += ( BATCH_SIZE - ( sz % BATCH_SIZE ) ) ; }
-        stat->init ( pm );
+        stat->init ( pm, step, numbatches );
         cout << "Done. Starting statistic test pass 1 [multithreaded]" << endl;
         exec->RunAndWait ( numbatches,  runFunc, prefetchFunc);
         outp->endTraceBlock();
