@@ -83,12 +83,6 @@ void StatisticProg::pearson_prog::progressiveGenerate ( shared_ptr<StatisticInde
     }
     auto joint_variance = shared_ptr<Matrix<StatisticValueType, Dynamic, Dynamic> > ( new Matrix<StatisticValueType, Dynamic, Dynamic>(numvalid,KEYNUM) );
     (*joint_variance) = (variance_traces->transpose() * (*variance_hyp)).array().sqrt();
-    unsigned int boh = sum_tracehyp[id]->rows();
-    unsigned int boh2 = sum_tracehyp[id]->cols();
-    unsigned int boh3 = mean_traces->cols();
-    boh3 = boh3;
-    boh = boh;
-    boh2 = boh2;
     (*stat) = ((*sum_tracehyp[id]) + ((mean_traces->transpose() * (*mean_hyp)) * curNtraces) - (mean_traces->transpose() * (*sum_hyp)) - (sum_traces[id]->transpose()*(*mean_hyp))).cwiseQuotient(*joint_variance);
 }
 
