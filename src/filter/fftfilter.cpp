@@ -245,7 +245,7 @@ void Filters::fftfilter::initFilterOutput(){
     }
     int seekRes;
     int writeRes;
-    seekRes = lseek(outFd, getBufferDimension(), SEEK_SET);
+    seekRes = lseek(outFd, getBufferDimension() - 1, SEEK_SET);
     writeRes = write(outFd, "", 1);
     if (writeRes == -1 || seekRes == -1){
         cerr << "Error inflating the file" << endl;
