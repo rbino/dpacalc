@@ -62,7 +62,7 @@ int DPA::main ( int argc, char** argv )
     stat = shared_ptr<StatisticProg::base> ( new StatisticProg::STATISTICPROGCLASS ( cmd ) );
     outp = shared_ptr<OutputFilter::base> ( new OutputFilter::OUTPUTFILTCLASS ( cmd, keygen ) );
     TCLAP::SwitchArg filterSwitch("i", "filter-input", "If set, the input is filtered. You must provide a configuration file with -c");
-    TCLAP::ValueArg<unsigned int> traceJump("t", "add-traces", "How many traces are added at every progressive round", true, 0, "1-KEYNUM");
+    TCLAP::ValueArg<unsigned int> traceJump("t", "trace-step", "How many traces are added at every progressive round", true, 0, "int");
     // cmd.add(filterSwitch);
     cmd.add(traceJump);
 	this->ShowCompileTimeOptions();
@@ -91,7 +91,7 @@ int DPA::main ( int argc, char** argv )
         cout << "Filtering..." << endl;
         filter->initFilterOutput();
         curTrace = 0;
-        exec->RunAndWait(input->NumTraces, filtFunc, NULL);
+        exec->RunAndWait(input->RealNumTraces, filtFunc, NULL);
         unsigned int newsize;
         void* newpointer = filter->getFilteredPointer(newsize);
         input->changeFileOffset(newpointer, newsize);
