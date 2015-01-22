@@ -30,4 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "output_prog/${CONFIG_CLASS_OUTPUT_PROG}.hpp"
 #include "statisticaltest_prog/${CONFIG_CLASS_STATISTIC_PROG}.hpp"
 
-#include "output_filter/${CONFIG_CLASS_OUTPUT_FILT}.hpp"
+#include "input_find/${CONFIG_CLASS_INPUT_FIND}.hpp"
+#include "filter_find/${CONFIG_CLASS_FILTER_FIND}.hpp"
+#include "output_find/${CONFIG_CLASS_OUTPUT_FIND}.hpp"
+#include "verification/${CONFIG_CLASS_VERIFICATION}.hpp"

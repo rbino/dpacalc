@@ -44,6 +44,11 @@ typedef Eigen::Matrix<IntermediateValueType, Eigen::Dynamic, Eigen::Dynamic> Int
 typedef Eigen::Matrix<TraceValueType, Eigen::Dynamic, Eigen::Dynamic> PowerModelMatrix;
 typedef Eigen::Matrix<StatisticValueType, Eigen::Dynamic, Eigen::Dynamic> StatisticIndexMatrix;
 typedef std::pair<StatisticValueType,StatisticValueType> ConfidencePair;
+typedef std::pair<float,float> FilterBand;
+typedef struct {
+    FilterBand band;
+    unsigned int ntraces;
+} BandWithTraces;
 typedef struct {
     std::shared_ptr<DataValueType> data;
     std::shared_ptr<Trace> trace;

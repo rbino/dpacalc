@@ -75,11 +75,7 @@ config OPTIMIZATION_OPTIONS
 endmenu
 menu "Class choices"  
   
-  menu "Common classes"
-
-    config CLASS_FILTER
-	      string "Name of the class that filters the input file"
-	      default "fftfilter"
+  menu "Common Classes"
   
     config CLASS_KEYGEN
 	      string "Name of the class that associates key index to real key value"
@@ -94,6 +90,10 @@ menu "Class choices"
     config CLASS_INPUT
 	      string "Name of the class that parses the input file"
 	      default "bin1"
+
+    config CLASS_FILTER
+	      string "Name of the class that filters the input file"
+	      default "fftfilter"
 
     config CLASS_INTERMEDIATE
 	      string "Name of the class that computes the intermediate value"
@@ -113,11 +113,7 @@ menu "Class choices"
 
   endmenu
 
-  menu "dpacalc_prog Classes"
-
-   config CLASS_INPUT_PROG
-	      string "Name of the class that parses the input file"
-	      default "bin1_prog"
+  menu "dpacalc_prog and dpacalc_findfilter common Classes"
 
     config CLASS_INTERMEDIATE_PROG
 	      string "Name of the class that computes the intermediate value"
@@ -130,16 +126,38 @@ menu "Class choices"
     config CLASS_STATISTIC_PROG
 	      string "Name of the class that computes statistic tests"
 	      default "pearson_prog"
-
-    config CLASS_OUTPUT_PROG
-	      string "Name of the class that writes output data"
-	      default "gnuplot_prog"
-
-    config CLASS_OUTPUT_FILT
-	      string "Name of the class that writes output filterfind data"
-	      default "output_fftfilterconf"
-
     
     endmenu
+
+  menu "dpacalc_prog Classes"
+  
+    config CLASS_INPUT_PROG
+	      string "Name of the class that parses the input file"
+	      default "bin1_prog"
+
+    config CLASS_OUTPUT_PROG
+	      string "Name of the class that writes output dpacalc_prog data"
+	      default "gnuplot_prog"
+  endmenu
+
+  menu "dpacalc_filterfind Classes"
+  
+    config CLASS_INPUT_FIND
+	      string "Name of the class that parses the input file"
+	      default "bin1_find"
+
+    config CLASS_FILTER_FIND
+	      string "Name of the class that makes the n-ary filter search"
+	      default "fftfilter_nary"
+
+    config CLASS_OUTPUT_FIND
+	      string "Name of the class that writes output dpacalc_filterfind data"
+	      default "filterhistogram"
+
+    config CLASS_VERIFICATION
+	      string "Name of the class that verifies that the attack is successful"
+	      default "confidenceinterval"
+
+  endmenu
 
 endmenu

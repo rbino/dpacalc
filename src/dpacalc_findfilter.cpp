@@ -27,7 +27,7 @@ using namespace std;
 
 int DPA::main ( int argc, char** argv )
 {
-/*
+
     auto filtFunc = [&] {
         shared_ptr<TraceWithData> trace(new TraceWithData);
         traceMutex.lock();
@@ -37,7 +37,8 @@ int DPA::main ( int argc, char** argv )
         filter->applyFilter(trace);
         filter->writeFilteredTrace(trace, localTrace);
     };
-*/
+
+
     auto prefetchFunc = [&] {
         while ( input->CurrentSample < input->SamplesPerTrace ) {
             input->populateQueue();
@@ -50,20 +51,19 @@ int DPA::main ( int argc, char** argv )
         int num = input->read ( &myid, &traces );
         sm.reset ( new StatisticIndexMatrix ( num, KEYNUM ) );
         stat->progressiveGenerate ( sm, traces, num, myid );
-        outp->WriteBatch ( myid, sm );
+        verif->batchBest(myid, sm);
     };
 	TCLAP::CmdLine cmd ( "DPA calc", ' ', VERSION );
 	exec = shared_ptr<ExecMethod::base> ( new ExecMethod::EXECCLASS ( cmd ) );
-	input = shared_ptr<SamplesInputProg::base> ( new SamplesInputProg::INPUTPROGCLASS ( cmd ) );
-    // filter = shared_ptr<Filters::base> ( new Filters::FILTERCLASS ( cmd, input ) );
+    input = shared_ptr<SamplesInputFind::base> ( new SamplesInputFind::INPUTFINDCLASS ( cmd ) );
+    filter = shared_ptr<FilterFind::base> ( new FilterFind::FILTERFINDCLASS ( cmd, input ) );
 	keygen = shared_ptr<KeyGenerators::base> ( new KeyGenerators::KEYGENCLASS ( cmd ) );
 	interm = shared_ptr<GenerateIntermediateValuesProg::base> ( new GenerateIntermediateValuesProg::GENINTERMPROGCLASS ( cmd, keygen ) );
 	genpm = shared_ptr<GeneratePowerModelProg::base> ( new GeneratePowerModelProg::GENPOWERMODELPROGCLASS ( cmd ) );
     stat = shared_ptr<StatisticProg::base> ( new StatisticProg::STATISTICPROGCLASS ( cmd ) );
-    outp = shared_ptr<OutputFilter::base> ( new OutputFilter::OUTPUTFILTCLASS ( cmd, keygen ) );
-    TCLAP::SwitchArg filterSwitch("i", "filter-input", "If set, the input is filtered. You must provide a configuration file with -c");
+    verif = shared_ptr<VerifyAttack::base> (new VerifyAttack::VERIFICATIONCLASS ( cmd ) );
+    outp = shared_ptr<OutputFind::base> ( new OutputFind::OUTPUTFINDCLASS ( cmd ) );
     TCLAP::ValueArg<unsigned int> traceJump("t", "trace-step", "How many traces are added at every progressive round", true, 0, "int");
-    // cmd.add(filterSwitch);
     cmd.add(traceJump);
 	this->ShowCompileTimeOptions();
 	try {
@@ -73,62 +73,114 @@ int DPA::main ( int argc, char** argv )
 		return 1;
     }
     input->init();
-    timeval start, startbatch, end, endbatch; // endfilter
+    timeval start, startbatch, end, endbatch, endfilter;
 	gettimeofday ( &start, NULL );
-    /*
-    if (filterSwitch.isSet()){
-        filter->init();
-    } else {
-        filter.reset();
-    }
-    */
+    filter->init();
     keygen->init();
     interm->init();
     genpm->init();
 	outp->init();
-    /*
-    if (filterSwitch.isSet()){
+
+    input->NumTraces = 0;
+    unsigned int step = traceJump.getValue();
+    bool success = false;
+    cout << "dpacalc_prog: calculating baseline" << endl;
+    while(input->NumTraces < input->RealNumTraces && !success){
+        gettimeofday ( &startbatch, NULL );
+        input->reinit();
+        // changeNumTraces clamps the number of traces to RealNumTraces
+        input->increaseNumTraces(step);
+        verif->currentTraces = input->NumTraces;
+        numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
+        cout << "dpacalc_prog: now processing " << input->NumTraces << "/" << input->RealNumTraces << " unfiltered traces..." << endl;
+        //cout << "Reading known data..." << endl;
+        data = input->readProgressiveData(step);
+        //cout << "Done. Calculating intermediate values.....[single threaded]" << endl;
+        interm->progressiveGenerate ( data, intval, step );
+        //cout << "Done. Calculating power model.....[single threaded]" << endl;
+        genpm->progressiveGenerate ( intval, pm, step );
+        //cout << "Done. Initializing statistic test [single threaded]:" << endl;
+        // StatisticIndexMatrix size should be a multiple of BATCH_SIZE
+        unsigned long sz = input->SamplesPerTrace;
+        if ( sz % BATCH_SIZE > 0 ) { sz += ( BATCH_SIZE - ( sz % BATCH_SIZE ) ) ; }
+        stat->init ( pm, step, numbatches );
+        //cout << "Done. Starting statistic test pass 1 [multithreaded]" << endl;
+        exec->RunAndWait ( numbatches,  runFunc, prefetchFunc);
+        //cout << " Done!" << endl;
+        success = verif->verify(stat);
+        gettimeofday ( &endbatch, NULL );
+        if (success){
+            successfulTraces = input->NumTraces;
+            cout << "Attack successful!" << endl;
+        } else {
+            cout << "Attack failed" << endl;
+        }
+        cout << "Batch elaboration of " << input->NumTraces << " traces took " << timevaldiff ( &startbatch, &endbatch ) << " milliseconds." << endl;
+    }
+    cout << "Baseline found: " << successfulTraces << " traces" << endl << endl;
+    cout << "dpacalc_prog: beginning to search for the best filter" << endl;
+    filter->setBaseline(successfulTraces);
+    while (!filter->hasFinished()){
+        success = false;
+        input->NumTraces = input->RealNumTraces;
+        pm.reset();
+        intval.reset();
+        stat->reset();
+        FilterBand curBand;
+        curTrace = 0;
+        curBand = filter->beginStep();
+        cout << "Trying with band " << std::fixed << curBand.first << "-" << curBand.second << " Hz" << endl;
         cout << "Filtering..." << endl;
         filter->initFilterOutput();
-        curTrace = 0;
         exec->RunAndWait(input->RealNumTraces, filtFunc, NULL);
         unsigned int newsize;
         void* newpointer = filter->getFilteredPointer(newsize);
         input->changeFileOffset(newpointer, newsize);
         gettimeofday ( &endfilter, NULL );
         cout << "Filtering took " << timevaldiff ( &start, &endfilter ) << " milliseconds." << endl;
-        cout << "Done. ";
+        //cout << "Done. ";
+        input->NumTraces = 0;
+
+        while(input->NumTraces < input->RealNumTraces && !success){
+            gettimeofday ( &startbatch, NULL );
+            input->reinit();
+            // changeNumTraces clamps the number of traces to RealNumTraces
+            input->increaseNumTraces(step);
+            verif->currentTraces = input->NumTraces;
+            numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
+            cout << "dpacalc_prog: now processing " << input->NumTraces << "/" << input->RealNumTraces << " traces..." << endl;
+            //cout << "Reading known data..." << endl;
+            data = input->readProgressiveData(step);
+            //cout << "Done. Calculating intermediate values.....[single threaded]" << endl;
+            interm->progressiveGenerate ( data, intval, step );
+            //cout << "Done. Calculating power model.....[single threaded]" << endl;
+            genpm->progressiveGenerate ( intval, pm, step );
+            //cout << "Done. Initializing statistic test [single threaded]:" << endl;
+            // StatisticIndexMatrix size should be a multiple of BATCH_SIZE
+            unsigned long sz = input->SamplesPerTrace;
+            if ( sz % BATCH_SIZE > 0 ) { sz += ( BATCH_SIZE - ( sz % BATCH_SIZE ) ) ; }
+            stat->init ( pm, step, numbatches );
+            //cout << "Done. Starting statistic test pass 1 [multithreaded]" << endl;
+            exec->RunAndWait ( numbatches,  runFunc, prefetchFunc);
+            //cout << " Done!" << endl;
+            success = verif->verify(stat);
+            gettimeofday ( &endbatch, NULL );
+            if (success){
+                cout << "Attack successful!" << endl;
+            } else {
+                cout << "Attack failed" << endl;
+            }
+            cout << "Batch elaboration of " << input->NumTraces << " traces took " << timevaldiff ( &startbatch, &endbatch ) << " milliseconds." << endl;
+        }
+
+        if (filter->isLastStep()){
+            outp->writeBand(curBand, input->NumTraces % input->RealNumTraces );
+        }
+        filter->endStep(input->NumTraces);
+        input->resetFileOffset();
     }
-    */
-    input->NumTraces = 0;
-    unsigned int step = traceJump.getValue();
-    while(input->NumTraces < input->RealNumTraces){
-        gettimeofday ( &startbatch, NULL );
-        input->reinit();
-        // changeNumTraces clamps the number of traces to RealNumTraces
-        input->increaseNumTraces(step);
-        outp->currentTraces = input->NumTraces;
-        numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
-        cout << "dpacalc_prog: now processing " << input->NumTraces << "/" << input->RealNumTraces << " traces..." << endl;
-        cout << "Reading known data..." << endl;
-        data = input->readProgressiveData(step);
-        cout << "Done. Calculating intermediate values.....[single threaded]" << endl;
-        interm->progressiveGenerate ( data, intval, step );
-        cout << "Done. Calculating power model.....[single threaded]" << endl;
-        genpm->progressiveGenerate ( intval, pm, step );
-        cout << "Done. Initializing statistic test [single threaded]:" << endl;
-        // StatisticIndexMatrix size should be a multiple of BATCH_SIZE
-        unsigned long sz = input->SamplesPerTrace;
-        if ( sz % BATCH_SIZE > 0 ) { sz += ( BATCH_SIZE - ( sz % BATCH_SIZE ) ) ; }
-        stat->init ( pm, step, numbatches );
-        cout << "Done. Starting statistic test pass 1 [multithreaded]" << endl;
-        exec->RunAndWait ( numbatches,  runFunc, prefetchFunc);
-        outp->endTraceBlock();
-        cout << " Done!" << endl;
-        gettimeofday ( &endbatch, NULL );
-        cout << "Batch elaboration of " << input->NumTraces << " traces took " << timevaldiff ( &startbatch, &endbatch ) << " milliseconds." << endl;
-    }
-	gettimeofday ( &end, NULL );
+
+    gettimeofday ( &end, NULL );
 	outp->end();
     cout << "Total elaboration took " << timevaldiff ( &start, &end ) << " milliseconds." << endl;
 	return 0;
@@ -140,19 +192,7 @@ void DPA::ShowCompileTimeOptions()
 	cout << "Number of bit of the key to guess : " << KEY_HYP_BIT << endl;
 	cout << "Size of known data : " << DATA_SIZE_BIT << " bit " << endl;
 	cout << "Size of key : " << KEY_SIZE_BIT << " bit " << endl;
-#if defined(CONFIG_FILTER_OUTPUT_DISK)
-    cout << "Filter output on disk" << endl;
-#elif defined(CONFIG_FILTER_OUTPUT_RAM)
     cout << "Filter output on RAM" << endl;
-#endif
-#if defined(CONFIG_FILTER_COMBINE_NOTHING)
-    cout << "Filter combining: do nothing" << endl;
-#elif defined(CONFIG_FILTER_COMBINE_NORMALIZE)
-    cout << "Filter combining: normalize" << endl;
-#elif defined(CONFIG_FILTER_COMBINE_CLAMP)
-    cout<< "Filter combining: clamp" << endl;
-#endif
-
 
 	cout << endl;
 	cout << "Name of the class that reads input file: " << INPUTCLASS_STR << endl;

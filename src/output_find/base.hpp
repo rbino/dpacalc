@@ -16,22 +16,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 #pragma once
 #include "dpacalc.h"
-#include "keygen/base.hpp"
 using namespace std;
-namespace OutputFilter
+namespace OutputFind
 {
 	class base
 	{
 		public:
-			base ( TCLAP::CmdLine& cmd, shared_ptr<KeyGenerators::base> _keygen ) : keygen ( _keygen ) {};
-			virtual void init() {};
-			virtual void WriteBatch ( unsigned long long id, shared_ptr<StatisticIndexMatrix>& s ) = 0;
-			virtual void endTraceBlock() {};
+      base (TCLAP::CmdLine& cmd) {};
+			virtual void init() = 0;
+      virtual void writeBand ( FilterBand band, unsigned int ntraces ) = 0;
 			virtual void end() {};
-			unsigned long long currentTraces;
-
-		protected:
-			shared_ptr<KeyGenerators::base> keygen;
 	};
 
 }

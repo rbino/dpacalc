@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2012	Massimo Maggi
+Copyright (C) 2014 Riccardo Binetti
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -16,20 +16,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 #pragma once
 #include "dpacalc.h"
-using namespace Eigen;
-using namespace std;
-namespace StatisticProg
+#include "statisticaltest_prog/base.hpp"
+
+namespace VerifyAttack
 {
 	class base
 	{
 		public:
-			virtual void progressiveGenerate ( shared_ptr<StatisticIndexMatrix>& stat, shared_ptr<TracesMatrix>& traces, unsigned long numvalid, unsigned long long id ) = 0;
 			base ( TCLAP::CmdLine& cmd ) {};
-			virtual void init ( shared_ptr<PowerModelMatrix>& _pm, unsigned int step, unsigned long nbatch ) {
-				pm = shared_ptr<PowerModelMatrix> ( _pm );
-			}
-      virtual void reset() {};
+			virtual void init() {};
+      virtual void batchBest(unsigned long long id, shared_ptr<StatisticIndexMatrix>& s ) {};
+			virtual bool verify(shared_ptr<StatisticProg::base> stat) = 0;
+			unsigned long long currentTraces;
+
 		protected:
-			shared_ptr<PowerModelMatrix> pm;
+	
 	};
+
 }

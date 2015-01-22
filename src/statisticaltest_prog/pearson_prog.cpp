@@ -86,3 +86,13 @@ void StatisticProg::pearson_prog::progressiveGenerate ( shared_ptr<StatisticInde
     (*stat) = ((*sum_tracehyp[id]) + ((mean_traces->transpose() * (*mean_hyp)) * curNtraces) - (mean_traces->transpose() * (*sum_hyp)) - (sum_traces[id]->transpose()*(*mean_hyp))).cwiseQuotient(*joint_variance);
 }
 
+void StatisticProg::pearson_prog::reset(){
+    curStep = 0;
+    curNtraces = 0;
+    first = true;
+    sum_traces.clear();
+    sum_tracesSquared.clear();
+    sum_tracehyp.clear();
+}
+
+

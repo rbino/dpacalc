@@ -28,6 +28,7 @@ namespace StatisticProg
             virtual void progressiveGenerate (shared_ptr<StatisticIndexMatrix>& stat, shared_ptr<TracesMatrix>& traces, unsigned long numvalid , unsigned long long id);
             pearson_prog ( TCLAP::CmdLine& cmd ) : base ( cmd ) {};
             virtual void init (shared_ptr<PowerModelMatrix>& _pm , unsigned int step, unsigned long nbatch);
+            virtual void reset();
 		protected:
             bool first = true;
             shared_ptr<Eigen::Matrix<TraceValueType, 1, Dynamic> > sum_hyp;
