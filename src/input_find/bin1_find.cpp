@@ -171,9 +171,7 @@ void SamplesInputFind::bin1_find::changeFileOffset(void *newOffset, long long ne
         mlock ( fileoffset, RealFileSize );
         cout << "mlock-ed" << endl;
     }
-#if defined(CONFIG_FILTER_OUTPUT_RAM)
     offsetUnmap = false;
-#endif
 }
 
 template <class T>void SamplesInputFind::bin1_find::readSamples ( shared_ptr<TracesMatrix>& traces, unsigned long curtrace, unsigned long startingsample, unsigned long numsamples )
