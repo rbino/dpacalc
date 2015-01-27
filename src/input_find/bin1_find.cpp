@@ -95,15 +95,16 @@ void SamplesInputFind::bin1_find::init()
 		cerr << "Cannot memory map input file. Cannot continue" << endl;
 		exit ( 3 );
 	}
-	if ( mlockArg.getValue() ) {
-		cout << "mlock-ing" << endl;
-		mlock ( fileoffset, RealFileSize );
-		cout << "mlock-ed" << endl;
-	}
     originalfileoffset = fileoffset;
     originalsamplesize = samplesize;
     OriginalRealFileSize = RealFileSize;
     originalsampletype = sampletype;
+	if ( mlockArg.getValue() ) {
+		cout << "mlock-ing" << endl;
+        mlock ( originalfileoffset, OriginalRealFileSize );
+		cout << "mlock-ed" << endl;
+	}
+
 }
 
 void SamplesInputFind::bin1_find::populateQueue()
@@ -151,12 +152,6 @@ void SamplesInputFind::bin1_find::populateQueue()
 }
 
 void SamplesInputFind::bin1_find::changeFileOffset(void *newOffset, long long newSize){
-    if ( mlockArg.getValue() ) {
-        cout << "munlock-ing old values" << endl;
-        munlock ( fileoffset, RealFileSize );
-        cout << "munlock-ed" << endl;
-    }
-    //munmap ( fileoffset, RealFileSize );
     fileoffset = newOffset;
     RealFileSize = newSize;
     samplesize = sizeof(TraceValueType);
@@ -165,11 +160,6 @@ void SamplesInputFind::bin1_find::changeFileOffset(void *newOffset, long long ne
     }
     else if (samplesize == sizeof(double)){
         sampletype = 'd';
-    }
-    if ( mlockArg.getValue() ) {
-        cout << "mlock-ing filtered values" << endl;
-        mlock ( fileoffset, RealFileSize );
-        cout << "mlock-ed" << endl;
     }
     offsetUnmap = false;
 }
@@ -239,7 +229,7 @@ std::shared_ptr< DataMatrix > SamplesInputFind::bin1_find::readProgressiveData(u
 SamplesInputFind::bin1_find::~bin1_find()
 {
     if ( mlockArg.getValue() ) {
-        munlock ( fileoffset, RealFileSize );
+        munlock ( originalfileoffset, OriginalRealFileSize );
     }
     if (offsetUnmap){
         munmap ( fileoffset, RealFileSize );
@@ -263,9 +253,6 @@ void SamplesInputFind::bin1_find::reinit(){
 }
 
 void SamplesInputFind::bin1_find::resetFileOffset(){
-    if ( mlockArg.getValue() ) {
-        munlock ( fileoffset, RealFileSize );
-    }
     if (offsetUnmap){
         munmap ( fileoffset, RealFileSize );
     } else {
