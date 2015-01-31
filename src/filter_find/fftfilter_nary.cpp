@@ -23,11 +23,7 @@ void FilterFind::fftfilter_nary::init(){
     NumTraces = input->RealNumTraces;
     config.open(filterConfArg.getValue().c_str());
     if (!config.is_open()){
-        if(!filterConfArg.isSet()){
-            cerr << "You must specify a filter configuration file (-c filename)" << endl;
-        } else {
-            cerr << "Cannot open filter configuration " << filterConfArg.getValue() << endl;
-        }
+        cerr << "Cannot open filter configuration " << filterConfArg.getValue() << endl;
         exit(3);
     }
     try
@@ -38,8 +34,8 @@ void FilterFind::fftfilter_nary::init(){
         {
             SamplingFrequency = pt.get<float>("samplingfrequency");
             fNyq = SamplingFrequency/2;
-            char pad = pt.get<char>("paddingtype");
-            switch(pad){
+            padconf = pt.get<char>("paddingtype");
+            switch(padconf){
                 case 'z':
                     padtype = ZERO;
                     padding = 0;
@@ -81,11 +77,14 @@ void FilterFind::fftfilter_nary::init(){
             filterDivisions = pt.get<unsigned int>("divisions");
             overlap = pt.get<float>("overlap");
             maxBadDepth = pt.get<unsigned int>("maxbaddepth");
-            configOut.open(pt.get<string>("outconf"));
-            if (!configOut.is_open()){
-                if(!filterConfArg.isSet()){
-                    cerr << "Cannot open filter configuration output " << filterConfArg.getValue() << endl;
-                }
+            configGoodOut.open(pt.get<string>("goodout"));
+            if (!configGoodOut.is_open()){
+                cerr << "Cannot open good filter configuration output " << endl;
+                exit(3);
+            }
+            configGoodUglyOut.open(pt.get<string>("gooduglyout"));
+            if (!configGoodUglyOut.is_open()){
+                cerr << "Cannot open ugly+good filter configuration output " << endl;
                 exit(3);
             }
         } catch( ptree_error e) {
@@ -105,7 +104,7 @@ void FilterFind::fftfilter_nary::init(){
     init.freq2 = fNyq;
     init.shape = filterShape;
     init.tukeyAlpha = filterTukeyAlpha;
-    alreadyProcessed.push(init);
+    alreadyProcessed.push_back(init);
 
 }
 
@@ -267,7 +266,7 @@ FilterBand FilterFind::fftfilter_nary::beginStep(){
         currentStep++;
         while (!alreadyProcessed.empty()){
             filterParam iter = alreadyProcessed.front();
-            alreadyProcessed.pop();
+            alreadyProcessed.pop_front();
             int winLen = iter.freq2 - iter.freq1;
             int curLo = iter.freq1;
             int subWinLen = winLen / ( (filterDivisions) - (filterDivisions-1) * overlap);
@@ -278,12 +277,12 @@ FilterBand FilterFind::fftfilter_nary::beginStep(){
                 filt.freq1 = floor(curLo);
                 filt.freq2 = ceil(curLo + subWinLen);
                 curLo = curLo + subWinLen - (subWinLen * overlap);
-                toBeProcessed.push(filt);
+                toBeProcessed.push_back(filt);
             }
         }
     }
     currentFilter = toBeProcessed.front();
-    toBeProcessed.pop();
+    toBeProcessed.pop_front();
     generateWindows(filter,currentFilter);
     FilterBand curBand;
     curBand.first = currentFilter.freq1;
@@ -294,20 +293,20 @@ FilterBand FilterFind::fftfilter_nary::beginStep(){
 void FilterFind::fftfilter_nary::endStep(unsigned int successTraces){
     if (successTraces < baseline){
         if (currentStep < filterSteps){
-            alreadyProcessed.push(currentFilter);
+            alreadyProcessed.push_back(currentFilter);
         } else {
-            goodFilters.push(currentFilter);
-            goodAndUglyFilters.push(currentFilter);
+            goodFilters.push_back(currentFilter);
+            goodAndUglyFilters.push_back(currentFilter);
         }
     } else if (successTraces < NumTraces) {
         if (currentStep < filterSteps) {
-            alreadyProcessed.push(currentFilter);
+            alreadyProcessed.push_back(currentFilter);
         } else {
-            goodAndUglyFilters.push(currentFilter);
+            goodAndUglyFilters.push_back(currentFilter);
         }
     } else {
         if (currentStep <= maxBadDepth) {
-            alreadyProcessed.push(currentFilter);
+            alreadyProcessed.push_back(currentFilter);
         }
     }
 }
@@ -318,4 +317,64 @@ bool FilterFind::fftfilter_nary::isLastStep(){
     } else {
         return false;
     }
+}
+
+bool FilterFind::filterParamCompare(const filterParam& firstElem, filterParam& secondElem) {
+    return firstElem.freq1 < secondElem.freq1;
+}
+
+
+void FilterFind::fftfilter_nary::writeConfig(ofstream& outfile, deque<filterParam> params, char padding, double fsampling){
+    ptree pt;
+    int count = 0;
+    filterParam cur;
+    string curFilt;
+    pt.put("paddingtype", padding);
+    pt.put("samplingfrequency", fsampling);
+    sort(params.begin(),params.end(), filterParamCompare);
+    while (!params.empty()){
+        cur = params.front();
+        params.pop_front();
+        while ((cur.freq2 > params.front().freq1) && !params.empty()){
+            cur.freq2 = params.front().freq2;
+            params.pop_front();
+        }
+        curFilt = "f" + to_string(count);
+        pt.put("filters."+ curFilt + ".type", "bp");
+        pt.put("filters."+ curFilt + ".frequencies.low", cur.freq1);
+        pt.put("filters."+ curFilt + ".frequencies.high", cur.freq2);
+        switch(cur.shape){
+            case RECT:
+                pt.put("filters."+ curFilt + ".window", "r");
+                break;
+            case HAMMING:
+                pt.put("filters."+ curFilt + ".window", "h");
+                break;
+            case HANN:
+                pt.put("filters."+ curFilt + ".window", "H");
+                break;
+            case TUKEY:
+                pt.put("filters."+ curFilt + ".window", "t");
+                pt.put("filters."+ curFilt + ".alpha", cur.tukeyAlpha);
+                break;
+        }
+        count++;
+    }
+    write_info(outfile,pt);
+}
+
+
+void FilterFind::fftfilter_nary::end(){
+    if (goodFilters.empty()){
+        cout << "No good filters. Writing empty filter configuration." << endl;
+    } else {
+        writeConfig(configGoodOut, goodFilters, padconf, SamplingFrequency);
+    }
+    if (goodAndUglyFilters.empty()){
+        cout << "No good and ugly filters. Writing empty filter configuration." << endl;
+    } else {
+        writeConfig(configGoodUglyOut, goodAndUglyFilters, padconf, SamplingFrequency);
+    }
+    configGoodOut.close();
+    configGoodUglyOut.close();
 }

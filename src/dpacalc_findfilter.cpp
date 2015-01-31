@@ -179,7 +179,7 @@ int DPA::main ( int argc, char** argv )
         filter->endStep(input->NumTraces);
         input->resetFileOffset();
     }
-
+    filter->end();
     gettimeofday ( &end, NULL );
 	outp->end();
     cout << "Total elaboration took " << timevaldiff ( &start, &end ) << " milliseconds." << endl;

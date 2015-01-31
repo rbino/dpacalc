@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "unsupported/Eigen/FFT"
 #include <iostream>
 #include <fstream>
-#include <queue>
 #include <utility>
 
 
@@ -33,6 +32,7 @@ using namespace boost::property_tree;
 
 namespace FilterFind
 {
+
     enum windowShape {
         RECT,
         HAMMING,
@@ -46,6 +46,8 @@ namespace FilterFind
         double freq2;
         double tukeyAlpha;
     } filterParam;
+
+    bool filterParamCompare(const filterParam& firstElem, filterParam& secondElem);
 
     enum padType {
         ZERO,
@@ -63,7 +65,7 @@ namespace FilterFind
              */
             fftfilter_nary ( TCLAP::CmdLine& cmd, shared_ptr<SamplesInputFind::base> _input) :
                 base ( cmd, _input ),
-                filterConfArg( "c", "filter-conf", "Filter search configuration filename", false, "", "path")
+                filterConfArg( "c", "filter-conf", "Filter search configuration filename", true, "", "path")
                 { cmd.add(filterConfArg);
                 };
             virtual void init();
@@ -89,18 +91,32 @@ namespace FilterFind
              */
             void* getFilteredPointer(unsigned int& newsize);
 
+            bool hasFinished();
+
+            void setBaseline(unsigned long steps);
+
+            FilterBand beginStep();
+
+            virtual void endStep(unsigned int successTraces);
+
+            virtual bool isLastStep();
+
+            virtual void end();
+
         protected:
 
             TCLAP::ValueArg<std::string> filterConfArg;
             ifstream config;
-            ofstream configOut;
-            queue<filterParam> toBeProcessed;
-            queue<filterParam> alreadyProcessed;
-            queue<filterParam> goodAndUglyFilters;
-            queue<filterParam> goodFilters;
+            ofstream configGoodOut;
+            ofstream configGoodUglyOut;
+            deque<filterParam> toBeProcessed;
+            deque<filterParam> alreadyProcessed;
+            deque<filterParam> goodAndUglyFilters;
+            deque<filterParam> goodFilters;
             filterParam currentFilter;
             mutex writeMutex;
             padType padtype;
+            char padconf;
             unsigned int currentStep;
             windowShape filterShape;
             float filterTukeyAlpha;
@@ -173,15 +189,7 @@ namespace FilterFind
                 return sizeof ( struct fileheaders ) + NumTraces * ( sizeof(TraceValueType) * SamplesPerTrace + DATA_SIZE_BYTE );
             }
 
-            bool hasFinished();
-
-            void setBaseline(unsigned long steps);
-
-            FilterBand beginStep();
-
-            virtual void endStep(unsigned int successTraces);
-
-            virtual bool isLastStep();
+            void writeConfig(ofstream& outfile, deque<filterParam> params, char padding, double fsampling);
 
             void* outBuffer;
 

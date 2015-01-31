@@ -37,6 +37,7 @@ namespace FilterFind
             virtual FilterBand beginStep() = 0;
             virtual void endStep(unsigned int successTraces) = 0;
             virtual bool isLastStep() = 0;
+            virtual void end() = 0;
 
 		protected:
             shared_ptr<SamplesInputFind::base> input;
