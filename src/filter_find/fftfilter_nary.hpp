@@ -47,7 +47,7 @@ namespace FilterFind
         double tukeyAlpha;
     } filterParam;
 
-    bool filterParamCompare(const filterParam& firstElem, filterParam& secondElem);
+    bool filterParamCompare(const filterParam &firstElem, const filterParam &secondElem);
 
     enum padType {
         ZERO,
