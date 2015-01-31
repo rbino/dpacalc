@@ -28,7 +28,7 @@ using namespace std;
 
 namespace OutputFind
 {
-
+    bool bandWithTracesSort(BandWithTraces band1, BandWithTraces band2);
     class filterhistogram: public base
 	{
 		public:

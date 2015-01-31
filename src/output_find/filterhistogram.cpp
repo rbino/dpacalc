@@ -28,7 +28,7 @@ void OutputFind::filterhistogram::init()
     }
 }
 
-bool bandWithTracesSort(BandWithTraces band1, BandWithTraces band2){
+bool OutputFind::bandWithTracesSort(BandWithTraces band1, BandWithTraces band2){
     return band1.band.first < band2.band.first;
 }
 
