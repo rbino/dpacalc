@@ -319,7 +319,7 @@ bool FilterFind::fftfilter_nary::isLastStep(){
     }
 }
 
-bool FilterFind::filterParamCompare(const filterParam& firstElem, filterParam& secondElem) {
+bool FilterFind::filterParamCompare(const filterParam& firstElem, const filterParam& secondElem) {
     return firstElem.freq1 < secondElem.freq1;
 }
 
