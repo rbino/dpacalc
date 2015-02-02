@@ -175,7 +175,7 @@ template <class T>void SamplesInputFind::bin1_find::readSamples ( shared_ptr<Tra
 }
 
 void SamplesInputFind::bin1_find::readTraceWithData(shared_ptr<TraceWithData>& tracewd, unsigned long id){
-    switch ( sampletype ) {
+    switch ( originalsampletype ) {
         case 'b':
             readTraceWithDataImplem<uint8_t> (tracewd, id );
             break;
@@ -197,9 +197,9 @@ template <class T> void SamplesInputFind::bin1_find::readTraceWithDataImplem(sha
     (tracewd -> trace).reset(new Trace(SamplesPerTrace));
     (tracewd -> data).reset(new DataValueType());
     //File is big enough, checked right after open.
-    traceData = ( char* ) fileoffset +  getDataOffset ( id );
+    traceData = ( char* ) originalfileoffset +  getOriginalDataOffset ( id );
     BufferToBitset<DATA_SIZE_BYTE> (traceData, *(tracewd->data));
-    buffer = ( T* ) ( ( char* ) fileoffset + getSampleOffset ( id, 0 ) );
+    buffer = ( T* ) ( ( char* ) originalfileoffset + getOriginalSampleOffset ( id, 0 ) );
     for ( unsigned long i = 0; i < SamplesPerTrace; i++ ) {
         (*tracewd -> trace) (i) = (TraceValueType) buffer[i];
     }

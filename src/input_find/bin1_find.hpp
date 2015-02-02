@@ -90,6 +90,14 @@ namespace SamplesInputFind
                 //trace and samplenum are zero-based
                 return sizeof ( struct fileheaders ) + trace * ( samplesize * SamplesPerTrace + DATA_SIZE_BYTE ) + samplesize * samplenum;
             }
+            unsigned long long getOriginalSampleOffset ( unsigned long long trace, unsigned long long samplenum ) {
+                //trace and samplenum are zero-based
+                return sizeof ( struct fileheaders ) + trace * ( originalsamplesize * SamplesPerTrace + DATA_SIZE_BYTE ) + originalsamplesize * samplenum;
+            }
+            unsigned long long getOriginalDataOffset ( unsigned long long trace ) {
+                //trace and samplenum are zero-based
+                return sizeof ( struct fileheaders ) + trace * ( originalsamplesize * SamplesPerTrace + DATA_SIZE_BYTE ) + originalsamplesize * SamplesPerTrace;
+            }
             unsigned long long getDataOffset ( unsigned long long trace ) {
                 //trace and samplenum are zero-based
                 return sizeof ( struct fileheaders ) + trace * ( samplesize * SamplesPerTrace + DATA_SIZE_BYTE ) + samplesize * SamplesPerTrace;

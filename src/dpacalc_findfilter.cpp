@@ -130,15 +130,12 @@ int DPA::main ( int argc, char** argv )
         curTrace = 0;
         curBand = filter->beginStep();
         cout << "Trying with band " << std::fixed << curBand.first << "-" << curBand.second << " Hz" << endl;
-        cout << "Filtering..." << endl;
         filter->initFilterOutput();
-        exec->RunAndWait(input->RealNumTraces, filtFunc, NULL);
         unsigned int newsize;
         void* newpointer = filter->getFilteredPointer(newsize);
         input->changeFileOffset(newpointer, newsize);
-        gettimeofday ( &endfilter, NULL );
-        cout << "Filtering took " << timevaldiff ( &start, &endfilter ) << " milliseconds." << endl;
         //cout << "Done. ";
+
         input->NumTraces = 0;
 
         while(input->NumTraces < input->RealNumTraces && !success){
@@ -150,6 +147,10 @@ int DPA::main ( int argc, char** argv )
             numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
             cout << "dpacalc_prog: now processing " << input->NumTraces << "/" << input->RealNumTraces << " traces..." << endl;
             //cout << "Reading known data..." << endl;
+            //cout << "Filtering..." << endl;
+            exec->RunAndWait(step, filtFunc, NULL);
+            gettimeofday ( &endfilter, NULL );
+            cout << "Filtering took " << timevaldiff ( &startbatch, &endfilter ) << " milliseconds." << endl;
             data = input->readProgressiveData(step);
             //cout << "Done. Calculating intermediate values.....[single threaded]" << endl;
             interm->progressiveGenerate ( data, intval, step );
