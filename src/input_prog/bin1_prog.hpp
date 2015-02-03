@@ -86,17 +86,29 @@ namespace SamplesInputProg
 			int inputfd;
 			template <class T> void readSamples ( shared_ptr<TracesMatrix>& traces, unsigned long curtrace, unsigned long startingsample, unsigned long numsamples );
 			char sampletype;
+            char originalsampletype;
 			int samplesize;
+            int originalsamplesize;
 			void* fileoffset;
+            void* originalfileoffset;
             bool offsetUnmap;
 			shared_ptr<DataMatrix> data;
 			void populateQueue();
 			mutex queuemutex;
 			long long RealFileSize;
+            long long OriginalRealFileSize;
 			queue<queueelement> readytraces;
             unsigned long long getSampleOffset ( unsigned long long trace, unsigned long long samplenum ) {
                 //trace and samplenum are zero-based
                 return sizeof ( struct fileheaders ) + trace * ( samplesize * SamplesPerTrace + DATA_SIZE_BYTE ) + samplesize * samplenum;
+            }
+            unsigned long long getOriginalSampleOffset ( unsigned long long trace, unsigned long long samplenum ) {
+                //trace and samplenum are zero-based
+                return sizeof ( struct fileheaders ) + trace * ( originalsamplesize * SamplesPerTrace + DATA_SIZE_BYTE ) + originalsamplesize * samplenum;
+            }
+            unsigned long long getOriginalDataOffset ( unsigned long long trace ) {
+                //trace and samplenum are zero-based
+                return sizeof ( struct fileheaders ) + trace * ( originalsamplesize * SamplesPerTrace + DATA_SIZE_BYTE ) + originalsamplesize * SamplesPerTrace;
             }
             unsigned long long getDataOffset ( unsigned long long trace ) {
                 //trace and samplenum are zero-based

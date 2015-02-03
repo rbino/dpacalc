@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "dpacalc.h"
 #include <mutex>
 #include "input_prog/base.hpp"
-#include "filter/base.hpp"
+#include "filter_prog/base.hpp"
 #include "keygen/base.hpp"
 #include "gen_intermediate_prog/base.hpp"
 #include "gen_powermodel_prog/base.hpp"
@@ -45,7 +45,7 @@ class DPA
 		unsigned long numbatches;
 		shared_ptr<ExecMethod::base> exec;
 		shared_ptr<SamplesInputProg::base> input;
-        // shared_ptr<Filters::base> filter;
+        shared_ptr<FiltersProg::base> filter;
 		shared_ptr<KeyGenerators::base> keygen;
 		shared_ptr<GenerateIntermediateValuesProg::base> interm;
 		shared_ptr<GeneratePowerModelProg::base> genpm;

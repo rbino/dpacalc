@@ -95,6 +95,10 @@ void SamplesInputProg::bin1_prog::init()
 		cerr << "Cannot memory map input file. Cannot continue" << endl;
 		exit ( 3 );
 	}
+    originalfileoffset = fileoffset;
+    originalsamplesize = samplesize;
+    OriginalRealFileSize = RealFileSize;
+    originalsampletype = sampletype;
 	if ( mlockArg.getValue() ) {
 		cout << "mlock-ing" << endl;
 		mlock ( fileoffset, RealFileSize );
@@ -147,12 +151,6 @@ void SamplesInputProg::bin1_prog::populateQueue()
 }
 
 void SamplesInputProg::bin1_prog::changeFileOffset(void *newOffset, long long newSize){
-    if ( mlockArg.getValue() ) {
-        cout << "munlock-ing old values" << endl;
-        munlock ( fileoffset, RealFileSize );
-        cout << "munlock-ed" << endl;
-    }
-    munmap ( fileoffset, RealFileSize );
     fileoffset = newOffset;
     RealFileSize = newSize;
     samplesize = sizeof(TraceValueType);
@@ -162,14 +160,7 @@ void SamplesInputProg::bin1_prog::changeFileOffset(void *newOffset, long long ne
     else if (samplesize == sizeof(double)){
         sampletype = 'd';
     }
-    if ( mlockArg.getValue() ) {
-        cout << "mlock-ing filtered values" << endl;
-        mlock ( fileoffset, RealFileSize );
-        cout << "mlock-ed" << endl;
-    }
-#if defined(CONFIG_FILTER_OUTPUT_RAM)
     offsetUnmap = false;
-#endif
 }
 
 template <class T>void SamplesInputProg::bin1_prog::readSamples ( shared_ptr<TracesMatrix>& traces, unsigned long curtrace, unsigned long startingsample, unsigned long numsamples )
@@ -183,7 +174,7 @@ template <class T>void SamplesInputProg::bin1_prog::readSamples ( shared_ptr<Tra
 }
 
 void SamplesInputProg::bin1_prog::readTraceWithData(shared_ptr<TraceWithData>& tracewd, unsigned long id){
-    switch ( sampletype ) {
+    switch ( originalsampletype ) {
         case 'b':
             readTraceWithDataImplem<uint8_t> (tracewd, id );
             break;
@@ -205,9 +196,9 @@ template <class T> void SamplesInputProg::bin1_prog::readTraceWithDataImplem(sha
     (tracewd -> trace).reset(new Trace(SamplesPerTrace));
     (tracewd -> data).reset(new DataValueType());
     //File is big enough, checked right after open.
-    traceData = ( char* ) fileoffset +  getDataOffset ( id );
+    traceData = ( char* ) originalfileoffset +  getOriginalDataOffset ( id );
     BufferToBitset<DATA_SIZE_BYTE> (traceData, *(tracewd->data));
-    buffer = ( T* ) ( ( char* ) fileoffset + getSampleOffset ( id, 0 ) );
+    buffer = ( T* ) ( ( char* ) originalfileoffset + getOriginalSampleOffset ( id, 0 ) );
     for ( unsigned long i = 0; i < SamplesPerTrace; i++ ) {
         (*tracewd -> trace) (i) = (TraceValueType) buffer[i];
     }

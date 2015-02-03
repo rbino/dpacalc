@@ -27,7 +27,7 @@ using namespace std;
 
 int DPA::main ( int argc, char** argv )
 {
-    /*
+
     auto filtFunc = [&] {
         shared_ptr<TraceWithData> trace(new TraceWithData);
         traceMutex.lock();
@@ -37,7 +37,7 @@ int DPA::main ( int argc, char** argv )
         filter->applyFilter(trace);
         filter->writeFilteredTrace(trace, localTrace);
     };
-    */
+
     auto prefetchFunc = [&] {
         while ( input->CurrentSample < input->SamplesPerTrace ) {
             input->populateQueue();
@@ -55,7 +55,7 @@ int DPA::main ( int argc, char** argv )
 	TCLAP::CmdLine cmd ( "DPA calc", ' ', VERSION );
 	exec = shared_ptr<ExecMethod::base> ( new ExecMethod::EXECCLASS ( cmd ) );
 	input = shared_ptr<SamplesInputProg::base> ( new SamplesInputProg::INPUTPROGCLASS ( cmd ) );
-    // filter = shared_ptr<Filters::base> ( new Filters::FILTERCLASS ( cmd ) );
+    filter = shared_ptr<FiltersProg::base> ( new FiltersProg::FILTERPROGCLASS ( cmd ) );
 	keygen = shared_ptr<KeyGenerators::base> ( new KeyGenerators::KEYGENCLASS ( cmd ) );
 	interm = shared_ptr<GenerateIntermediateValuesProg::base> ( new GenerateIntermediateValuesProg::GENINTERMPROGCLASS ( cmd, keygen ) );
 	genpm = shared_ptr<GeneratePowerModelProg::base> ( new GeneratePowerModelProg::GENPOWERMODELPROGCLASS ( cmd ) );
@@ -63,7 +63,7 @@ int DPA::main ( int argc, char** argv )
     outp = shared_ptr<OutputProg::base> ( new OutputProg::OUTPUTPROGCLASS ( cmd, keygen ) );
     TCLAP::SwitchArg filterSwitch("i", "filter-input", "If set, the input is filtered. You must provide a configuration file with -c");
     TCLAP::ValueArg<unsigned int> traceJump("t", "trace-step", "How many traces are added at every progressive round", true, 0, "int");
-    // cmd.add(filterSwitch);
+    cmd.add(filterSwitch);
     cmd.add(traceJump);
 	this->ShowCompileTimeOptions();
 	try {
@@ -73,33 +73,24 @@ int DPA::main ( int argc, char** argv )
 		return 1;
     }
     input->init();
-    timeval start, startbatch, end, endbatch; // endfilter
+    timeval start, startbatch, end, endbatch, endfilter;
 	gettimeofday ( &start, NULL );
-    /*
     if (filterSwitch.isSet()){
         filter->init(input->SamplesPerTrace,input->RealNumTraces);
     } else {
         filter.reset();
     }
-    */
     keygen->init();
     interm->init();
     genpm->init();
 	outp->init();
-    /*
     if (filterSwitch.isSet()){
-        cout << "Filtering..." << endl;
         filter->initFilterOutput();
         curTrace = 0;
-        exec->RunAndWait(input->NumTraces, filtFunc, NULL);
         unsigned int newsize;
         void* newpointer = filter->getFilteredPointer(newsize);
         input->changeFileOffset(newpointer, newsize);
-        gettimeofday ( &endfilter, NULL );
-        cout << "Filtering took " << timevaldiff ( &start, &endfilter ) << " milliseconds." << endl;
-        cout << "Done. ";
     }
-    */
     input->NumTraces = 0;
     unsigned int step = traceJump.getValue();
     while(input->NumTraces < input->RealNumTraces){
@@ -110,6 +101,12 @@ int DPA::main ( int argc, char** argv )
         outp->currentTraces = input->NumTraces;
         numbatches = ( input->SamplesPerTrace / BATCH_SIZE ) + ( ( ( input->SamplesPerTrace % BATCH_SIZE ) == 0 ) ? 0 : 1 );
         cout << "dpacalc_prog: now processing " << input->NumTraces << "/" << input->RealNumTraces << " traces..." << endl;
+        if (filterSwitch.isSet()){
+            cout << "Filtering..." << endl;
+            exec->RunAndWait(step, filtFunc, NULL);
+            gettimeofday ( &endfilter, NULL );
+            cout << "Filtering took " << timevaldiff ( &startbatch, &endfilter ) << " milliseconds." << endl;
+        }
         cout << "Reading known data..." << endl;
         data = input->readProgressiveData(step);
         cout << "Done. Calculating intermediate values.....[single threaded]" << endl;
