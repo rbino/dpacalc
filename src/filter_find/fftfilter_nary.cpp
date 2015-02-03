@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <sys/mman.h>
 #include <fcntl.h>
 
-void FilterFind::fftfilter_nary::init(){
-    SamplesPerTrace = input->SamplesPerTrace;
-    NumTraces = input->RealNumTraces;
+void FilterFind::fftfilter_nary::init(unsigned long long _samplespertrace, unsigned long long _numtraces){
+    SamplesPerTrace = _samplespertrace;
+    NumTraces = _numtraces;
     config.open(filterConfArg.getValue().c_str());
     if (!config.is_open()){
         cerr << "Cannot open filter configuration " << filterConfArg.getValue() << endl;

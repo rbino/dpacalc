@@ -56,7 +56,7 @@ int DPA::main ( int argc, char** argv )
 	TCLAP::CmdLine cmd ( "DPA calc", ' ', VERSION );
 	exec = shared_ptr<ExecMethod::base> ( new ExecMethod::EXECCLASS ( cmd ) );
     input = shared_ptr<SamplesInputFind::base> ( new SamplesInputFind::INPUTFINDCLASS ( cmd ) );
-    filter = shared_ptr<FilterFind::base> ( new FilterFind::FILTERFINDCLASS ( cmd, input ) );
+    filter = shared_ptr<FilterFind::base> ( new FilterFind::FILTERFINDCLASS ( cmd ) );
 	keygen = shared_ptr<KeyGenerators::base> ( new KeyGenerators::KEYGENCLASS ( cmd ) );
 	interm = shared_ptr<GenerateIntermediateValuesProg::base> ( new GenerateIntermediateValuesProg::GENINTERMPROGCLASS ( cmd, keygen ) );
 	genpm = shared_ptr<GeneratePowerModelProg::base> ( new GeneratePowerModelProg::GENPOWERMODELPROGCLASS ( cmd ) );
@@ -75,7 +75,7 @@ int DPA::main ( int argc, char** argv )
     input->init();
     timeval start, startbatch, end, endbatch, endfilter;
 	gettimeofday ( &start, NULL );
-    filter->init();
+    filter->init(input->SamplesPerTrace, input->RealNumTraces);
     keygen->init();
     interm->init();
     genpm->init();

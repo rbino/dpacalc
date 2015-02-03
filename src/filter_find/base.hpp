@@ -26,8 +26,8 @@ namespace FilterFind
 	class base
 	{
 		public:
-            base ( TCLAP::CmdLine& cmd, shared_ptr<SamplesInputFind::base> _input ) : input ( _input ) {};
-            virtual void init() {};
+            base ( TCLAP::CmdLine& cmd ) {};
+            virtual void init(unsigned long long _samplespertrace, unsigned long long _numtraces) {};
 						virtual void applyFilter(shared_ptr<TraceWithData>& tracewd) = 0;
 						virtual void* getFilteredPointer(unsigned int& newsize) = 0;
 						virtual void initFilterOutput() = 0;
@@ -40,7 +40,6 @@ namespace FilterFind
             virtual void end() = 0;
 
 		protected:
-            shared_ptr<SamplesInputFind::base> input;
 			unsigned long long SamplesPerTrace; //from metadata, dimension N of matrix T
 			unsigned long long NumTraces; //dimension N of matrix T
             double SamplingFrequency;

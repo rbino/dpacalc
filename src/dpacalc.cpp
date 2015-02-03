@@ -53,7 +53,7 @@ int DPA::main ( int argc, char** argv )
 	TCLAP::CmdLine cmd ( "DPA calc", ' ', VERSION );
 	exec = shared_ptr<ExecMethod::base> ( new ExecMethod::EXECCLASS ( cmd ) );
 	input = shared_ptr<SamplesInput::base> ( new SamplesInput::INPUTCLASS ( cmd ) );
-    filter = shared_ptr<Filters::base> ( new Filters::FILTERCLASS ( cmd, input ) );
+    filter = shared_ptr<Filters::base> ( new Filters::FILTERCLASS ( cmd ) );
 	keygen = shared_ptr<KeyGenerators::base> ( new KeyGenerators::KEYGENCLASS ( cmd ) );
 	interm = shared_ptr<GenerateIntermediateValues::base> ( new GenerateIntermediateValues::GENINTERMCLASS ( cmd, keygen ) );
 	genpm = shared_ptr<GeneratePowerModel::base> ( new GeneratePowerModel::GENPOWERMODELCLASS ( cmd ) );
@@ -72,7 +72,7 @@ int DPA::main ( int argc, char** argv )
     timeval start, endfilter, end;
 	gettimeofday ( &start, NULL );
     if (filterSwitch.isSet()){
-        filter->init();
+        filter->init(input->SamplesPerTrace, input->NumTraces);
     } else {
         filter.reset();
     }

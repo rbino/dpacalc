@@ -57,10 +57,9 @@ namespace Filters
              /**
              * @brief fftfilter Creates an instance of the fftfilter class
              * @param cmd The TCLAP::CmdLine which is used to add command line arguments
-             * @param _input A shared_ptr to the input class instance created in the main
              */
-            fftfilter ( TCLAP::CmdLine& cmd, shared_ptr<SamplesInput::base> _input) :
-                base ( cmd, _input ),
+            fftfilter ( TCLAP::CmdLine& cmd) :
+                base ( cmd ),
 #if defined(CONFIG_FILTER_OUTPUT_DISK)
                 filterOutFileConfArg("t", "filter-output", "Filter output file", false, "", "path"),
 #endif
@@ -70,7 +69,7 @@ namespace Filters
                   cmd.add(filterOutFileConfArg);
 #endif
                 };
-            virtual void init();
+            virtual void init(unsigned long long _samplespertrace, unsigned long long _numtraces);
             /**
              * @brief applyFilter Applies the member filter to the trace (coefficient wise multiplication)
              * @param tracewd shared_ptr to the TraceWithData you want to apply the filter to (only the Trace is affected)

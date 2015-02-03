@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include <sys/mman.h>
 #include <fcntl.h>
 
-void Filters::fftfilter::init(){
-    SamplesPerTrace = input->SamplesPerTrace;
-    NumTraces = input->NumTraces;
+void Filters::fftfilter::init(unsigned long long _samplespertrace, unsigned long long _numtraces){
+    SamplesPerTrace = _samplespertrace;
+    NumTraces = _numtraces;
     config.open(filterConfArg.getValue().c_str());
     if (!config.is_open()){
         if(!filterConfArg.isSet()){

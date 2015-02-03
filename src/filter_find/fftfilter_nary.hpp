@@ -61,14 +61,13 @@ namespace FilterFind
              /**
              * @brief fftfilter_nary Creates an instance of the fftfilter_nary class
              * @param cmd The TCLAP::CmdLine which is used to add command line arguments
-             * @param _input A shared_ptr to the input class instance created in the main
              */
-            fftfilter_nary ( TCLAP::CmdLine& cmd, shared_ptr<SamplesInputFind::base> _input) :
-                base ( cmd, _input ),
+            fftfilter_nary ( TCLAP::CmdLine& cmd ) :
+                base ( cmd ),
                 filterConfArg( "c", "filter-conf", "Filter search configuration filename", true, "", "path")
                 { cmd.add(filterConfArg);
                 };
-            virtual void init();
+            virtual void init(unsigned long long _samplespertrace, unsigned long long _numtraces);
             /**
              * @brief applyFilter Applies the member filter to the trace (coefficient wise multiplication)
              * @param tracewd shared_ptr to the TraceWithData you want to apply the filter to (only the Trace is affected)
