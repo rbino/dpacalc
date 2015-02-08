@@ -70,9 +70,4 @@ void GenerateIntermediateValuesProg::aes128round1_prog::progressiveGenerate ( sh
     }
     fill(knowndata,intval,0,step);
     return;
-    /*
-    unsigned long curTraces = intval->rows();
-    intval->conservativeResize(curTraces+step,NoChange);
-    fill(knowndata, intval, curTraces, step);
-    */
 }

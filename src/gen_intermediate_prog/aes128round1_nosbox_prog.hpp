@@ -20,13 +20,13 @@ using namespace Eigen;
 using namespace std;
 namespace GenerateIntermediateValuesProg
 {
-    class aes128round1_prog_nosbox : public base
+    class aes128round1_nosbox_prog : public base
 	{
 		public:
 
             virtual void progressiveGenerate ( shared_ptr<DataMatrix>& knowndata, shared_ptr<IntermediateValueMatrix>& intval, unsigned int step );
 			virtual void init();
-            aes128round1_prog_nosbox ( TCLAP::CmdLine& cmd, shared_ptr<KeyGenerators::base> _keygen ) : base ( cmd, _keygen ),
+            aes128round1_nosbox_prog ( TCLAP::CmdLine& cmd, shared_ptr<KeyGenerators::base> _keygen ) : base ( cmd, _keygen ),
 				whichsboxArg ( "b", "sbox", "From which SBOX output should I start to correlate?", false, 0, "0-15" ),
 				sboxnumArg ( "v", "sboxnum", "How many consecutive SBOXes should I consider?", false, 1, "1-8" ) {
 				cmd.add ( whichsboxArg );

@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 #include "dpacalc.h"
-#include "aes128round1_prog_nosbox.hpp"
+#include "aes128round1_nosbox_prog.hpp"
 #include "aes.h"
-void GenerateIntermediateValuesProg::aes128round1_prog_nosbox::init()
+void GenerateIntermediateValuesProg::aes128round1_nosbox_prog::init()
 {
 	if ( whichsboxArg.getValue() + sboxnumArg.getValue() > AES_STATE_BYTES_NO || whichsboxArg.getValue() < 0 || sboxnumArg.getValue() < 1 ) {
 		cerr << "Maximum number of SBOXes exceeded." << endl;
@@ -25,7 +25,7 @@ void GenerateIntermediateValuesProg::aes128round1_prog_nosbox::init()
 	}
 }
 
-void GenerateIntermediateValuesProg::aes128round1_prog_nosbox::fill ( shared_ptr<DataMatrix>& knowndata, shared_ptr<IntermediateValueMatrix>& intval, unsigned long startTrace, unsigned int step )
+void GenerateIntermediateValuesProg::aes128round1_nosbox_prog::fill ( shared_ptr<DataMatrix>& knowndata, shared_ptr<IntermediateValueMatrix>& intval, unsigned long startTrace, unsigned int step )
 {
 	std::bitset<KEY_SIZE_BIT> key;
 	uint8_t fullaeskey[AES_STATE_BYTES_NO];
@@ -63,14 +63,11 @@ void GenerateIntermediateValuesProg::aes128round1_prog_nosbox::fill ( shared_ptr
 	}
 }
 
-void GenerateIntermediateValuesProg::aes128round1_prog_nosbox::progressiveGenerate ( shared_ptr<DataMatrix>& knowndata, shared_ptr<IntermediateValueMatrix>& intval, unsigned int step )
+void GenerateIntermediateValuesProg::aes128round1_nosbox_prog::progressiveGenerate ( shared_ptr<DataMatrix>& knowndata, shared_ptr<IntermediateValueMatrix>& intval, unsigned int step )
 {
     if (intval.get() == NULL){
         intval.reset( new IntermediateValueMatrix ( step, KEYNUM ));
-        fill(knowndata,intval,0,step);
-        return;
     }
-    unsigned long curTraces = intval->rows();
-    intval->conservativeResize(curTraces+step,NoChange);
-    fill(knowndata, intval, curTraces, step);
+    fill(knowndata,intval,0,step);
+    return;
 }
