@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.6)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/../cmake)
 INCLUDE (${CMAKE_SOURCE_DIR}/../dpacalc-config.cmake)
 
-find_package(Eigen 3.2.0 REQUIRED)
+find_package(Eigen 3.2.1 REQUIRED)
 find_package(TCLAP REQUIRED)
 find_package(Boost REQUIRED)
 set( CMAKE_CXX_FLAGS "-std=c++0x -Wall -Werror -Wno-uninitialized ${CONFIG_DEBUG_OPTIONS} ${CONFIG_OPTIMIZATION_OPTIONS}")

@@ -73,7 +73,13 @@ else ()
   if(EIGEN_INCLUDE_DIR)
     _eigen3_check_version()
   endif(EIGEN_INCLUDE_DIR)
-
+  
+  if(NOT EIGEN_VERSION_OK)
+    set(EIGEN_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/../dependencies/eigen/)
+    _eigen3_check_version()
+    message(STATUS "Using included Eigen version ${EIGEN_VERSION}")
+  endif(NOT EIGEN_VERSION_OK) 
+ 
   include(FindPackageHandleStandardArgs)
   find_package_handle_standard_args(Eigen DEFAULT_MSG EIGEN_INCLUDE_DIR EIGEN_VERSION_OK)
 
